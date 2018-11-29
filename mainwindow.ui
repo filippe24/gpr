@@ -54,6 +54,13 @@
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
+         <widget class="QPushButton" name="defaultButton">
+          <property name="text">
+           <string>Default</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QCheckBox" name="checkBoxFill">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -70,6 +77,16 @@
          </widget>
         </item>
         <item>
+         <widget class="QCheckBox" name="checkBoxRefl">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="text">
+           <string>Reflection Lines</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QLabel" name="label">
           <property name="text">
            <string>Curvatures</string>
@@ -79,20 +96,40 @@
         <item>
          <layout class="QVBoxLayout" name="Curvatures">
           <item>
+           <widget class="QPushButton" name="ComputeCurvature">
+            <property name="text">
+             <string>Curvatures</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QRadioButton" name="Gaussian">
             <property name="text">
              <string>Gaussian</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
           <item>
            <widget class="QRadioButton" name="Mean">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
             <property name="text">
              <string>Mean</string>
             </property>
            </widget>
           </item>
          </layout>
+        </item>
+        <item>
+         <widget class="QPushButton" name="LaplacianPush">
+          <property name="text">
+           <string>Laplacian</string>
+          </property>
+         </widget>
         </item>
         <item>
          <spacer name="verticalSpacer">
