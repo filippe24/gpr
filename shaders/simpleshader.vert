@@ -9,20 +9,45 @@ layout (location = 2) in vec2 curvature_colors;
 
 out vec3 fragNormal;
 out vec3 vertColor;
+out vec3 fragPos;
 
 uniform mat4 projection, modelview;
 uniform mat3 normalMatrix;
+uniform float min_gauss;
+uniform float max_gauss;
+uniform float min_mean;
+uniform float max_mean;
+
+uniform bool select_gauss = false;
+
 
 
 void main()
 {
-	gl_Position = projection * modelview * vec4(position, 1.0);
-	fragNormal = normalMatrix * normal;
-        vertColor = vec3(curvature_colors.x/3.0, curvature_colors.y/2.0, (curvature_colors.x/3.0 + curvature_colors.y/2.0)/2.0 );
+        //fragPos = (modelview * vec4(position, 1.0)).xyz;
+        //fragNormal = normalMatrix * normal;
+
+        fragPos = position;
+        fragNormal = normal;
+
+        gl_Position = projection * modelview * vec4(position, 1.0);
+
+        float gauss_curv = (curvature_colors.x - min_gauss)/max_gauss;
+        float mean_curv = (curvature_colors.y - min_mean)/max_mean;
+
+        vec3 col1 = vec3(1,0,0);
+        vec3 col2 = vec3(0,0,1);
+        vec3 col3 = vec3(0,1,0);
+
+        vec3 gauss_color = mix(col1,col2,gauss_curv);
+        vec3 mean_color = mix(col3,col1, mean_curv);
+        if(select_gauss)
+            vertColor = gauss_color;
+        else
+            vertColor = mean_color;
+
 //        vertColor = vec3((1.0 - curvature_colors.x/3.0), (1.0 - curvature_colors.x/3.0), (1.0 - curvature_colors.x/3.0) );
 //        vertColor = vec3((1.0 - curvature_colors.y/3.0), (1.0 - curvature_colors.y/3.0), (1.0 - curvature_colors.y/3.0) );
-
-
 
 }
 

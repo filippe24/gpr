@@ -32,7 +32,30 @@ void MainWindow::on_action_Open_triggered()
 	ui->openGLWidget->loadMesh(filename);
 }
 
-void MainWindow::on_Gaussian_toggled(bool checked)
-{
 
+void MainWindow::on_Mean_clicked(bool checked)
+{
+    ui->openGLWidget->select_gauss_mean(checked);
+
+}
+
+void MainWindow::on_Gaussian_clicked(bool checked)
+{
+    ui->openGLWidget->select_gauss_mean(not(checked));
+}
+
+void MainWindow::on_checkBoxRefl_clicked(bool checked)
+{
+    ui->openGLWidget->set_reflection_lines(checked);
+}
+
+
+void MainWindow::on_ComputeCurvature_clicked()
+{
+    ui->openGLWidget->compute_curvatures();
+}
+
+void MainWindow::on_LaplacianPush_clicked()
+{
+    ui->openGLWidget->laplacian_operator();
 }

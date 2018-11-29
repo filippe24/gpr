@@ -36,6 +36,8 @@ GLWidget::~GLWidget()
 
 void GLWidget::initializeGL()
 {
+    std::cout << "INITIALIZE GL" << std::endl;
+
 	initializeOpenGLFunctions();
 
 	program = new QOpenGLShaderProgram();
@@ -62,6 +64,8 @@ void GLWidget::initializeGL()
 
 void GLWidget::resizeGL(int w, int h)
 {
+    std::cout << "RESIZE GL" << std::endl;
+
 	glViewport(0,0,w,h);
 	setProjection((float)w/h);
 	setModelview();
@@ -69,10 +73,32 @@ void GLWidget::resizeGL(int w, int h)
 
 void GLWidget::paintGL()
 {
+
+    std::cout << "PAINT GL" << std::endl;
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	program->bind();
 	program->setUniformValue("bLighting", bPolygonFill);
+
+    //curvature
+    program->setUniformValue("bCurvature", curvtures_active);
+    program->setUniformValue("select_gauss", select_gauss);
+
+    //reflection lines
+    program->setUniformValue("bReflectionLines", bReflectionLines);
+
+    if(curvtures_active)
+    {
+        program->setUniformValue("min_gauss", mesh.min_gauss);
+        program->setUniformValue("max_gauss", mesh.max_gauss);
+        program->setUniformValue("min_mean", mesh.min_mean);
+        program->setUniformValue("max_mean", mesh.max_mean);
+    }
+
+
+
+
 	if(bPolygonFill)
 		program->setUniformValue("color", QVector4D(0.75, 0.8, 0.9, 1.0));
 	else
@@ -83,9 +109,9 @@ void GLWidget::paintGL()
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		//cube.render(*this);
 		mesh.render(*this);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		glDisable(GL_POLYGON_OFFSET_FILL);
-		program->setUniformValue("color", QVector4D(0.05, 0.05, 0.15, 1.0));
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glDisable(GL_POLYGON_OFFSET_FILL);
+        program->setUniformValue("color", QVector4D(0.05, 0.05, 0.15, 1.0));
 	}
 	//cube.render(*this);
 	mesh.render(*this);
@@ -159,6 +185,8 @@ void GLWidget::setPolygonMode(bool bFill)
 
 void GLWidget::loadMesh(const QString &filename)
 {
+    std::cout << "LOAD MESH" << std::endl;
+
 	PLYReader reader;
 
 	mesh.destroy();
@@ -171,4 +199,33 @@ void GLWidget::loadMesh(const QString &filename)
 	}
 	doneCurrent();
 	update();
+}
+void GLWidget::compute_curvatures()
+{
+    curvtures_active = !curvtures_active;
+    update();
+}
+
+void GLWidget::select_gauss_mean(bool b)
+{
+    select_gauss = b;
+    update();
+    std::cout << " print gauss ?? " << b << std::endl;
+
+    std::cout << " gauss max: " << mesh.max_gauss << ", gauss min: " << mesh.min_gauss << ".  mean max:" << mesh.max_mean << ", mean min: " << mesh.min_mean << std::endl;
+}
+
+
+void GLWidget::set_reflection_lines(bool b)
+{
+    bReflectionLines = b;
+    update();
+}
+
+
+void GLWidget::laplacian_operator()
+{
+    mesh.computeLaplacianOperator();
+    mesh.applyLaplacian();
+    update();
 }

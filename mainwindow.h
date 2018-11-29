@@ -22,7 +22,16 @@ private slots:
 
 	void on_action_Open_triggered();
 
-    void on_Gaussian_toggled(bool checked);
+    void on_Mean_clicked(bool checked);
+
+    void on_Gaussian_clicked(bool checked);
+
+    void on_checkBoxRefl_clicked(bool checked);
+
+
+    void on_ComputeCurvature_clicked();
+
+    void on_LaplacianPush_clicked();
 
 private:
 	Ui::MainWindow *ui;

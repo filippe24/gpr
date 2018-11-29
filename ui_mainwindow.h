@@ -20,6 +20,7 @@
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QMenuBar>
+#include <QtWidgets/QPushButton>
 #include <QtWidgets/QRadioButton>
 #include <QtWidgets/QSpacerItem>
 #include <QtWidgets/QTabWidget>
@@ -40,11 +41,15 @@ public:
     QTabWidget *tabWidget;
     QWidget *tabRender;
     QVBoxLayout *verticalLayout;
+    QPushButton *defaultButton;
     QCheckBox *checkBoxFill;
+    QCheckBox *checkBoxRefl;
     QLabel *label;
     QVBoxLayout *Curvatures;
+    QPushButton *ComputeCurvature;
     QRadioButton *Gaussian;
     QRadioButton *Mean;
+    QPushButton *LaplacianPush;
     QSpacerItem *verticalSpacer;
     QMenuBar *menuBar;
     QMenu *menu_File;
@@ -89,6 +94,11 @@ public:
         verticalLayout->setSpacing(6);
         verticalLayout->setContentsMargins(11, 11, 11, 11);
         verticalLayout->setObjectName(QStringLiteral("verticalLayout"));
+        defaultButton = new QPushButton(tabRender);
+        defaultButton->setObjectName(QStringLiteral("defaultButton"));
+
+        verticalLayout->addWidget(defaultButton);
+
         checkBoxFill = new QCheckBox(tabRender);
         checkBoxFill->setObjectName(QStringLiteral("checkBoxFill"));
         QSizePolicy sizePolicy2(QSizePolicy::Preferred, QSizePolicy::Fixed);
@@ -100,6 +110,12 @@ public:
 
         verticalLayout->addWidget(checkBoxFill);
 
+        checkBoxRefl = new QCheckBox(tabRender);
+        checkBoxRefl->setObjectName(QStringLiteral("checkBoxRefl"));
+        checkBoxRefl->setEnabled(true);
+
+        verticalLayout->addWidget(checkBoxRefl);
+
         label = new QLabel(tabRender);
         label->setObjectName(QStringLiteral("label"));
 
@@ -108,18 +124,30 @@ public:
         Curvatures = new QVBoxLayout();
         Curvatures->setSpacing(6);
         Curvatures->setObjectName(QStringLiteral("Curvatures"));
+        ComputeCurvature = new QPushButton(tabRender);
+        ComputeCurvature->setObjectName(QStringLiteral("ComputeCurvature"));
+
+        Curvatures->addWidget(ComputeCurvature);
+
         Gaussian = new QRadioButton(tabRender);
         Gaussian->setObjectName(QStringLiteral("Gaussian"));
+        Gaussian->setChecked(true);
 
         Curvatures->addWidget(Gaussian);
 
         Mean = new QRadioButton(tabRender);
         Mean->setObjectName(QStringLiteral("Mean"));
+        Mean->setEnabled(true);
 
         Curvatures->addWidget(Mean);
 
 
         verticalLayout->addLayout(Curvatures);
+
+        LaplacianPush = new QPushButton(tabRender);
+        LaplacianPush->setObjectName(QStringLiteral("LaplacianPush"));
+
+        verticalLayout->addWidget(LaplacianPush);
 
         verticalSpacer = new QSpacerItem(20, 475, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
@@ -154,10 +182,14 @@ public:
         MainWindow->setWindowTitle(QApplication::translate("MainWindow", "MainWindow", Q_NULLPTR));
         action_Quit->setText(QApplication::translate("MainWindow", "&Quit", Q_NULLPTR));
         action_Open->setText(QApplication::translate("MainWindow", "&Open", Q_NULLPTR));
+        defaultButton->setText(QApplication::translate("MainWindow", "Default", Q_NULLPTR));
         checkBoxFill->setText(QApplication::translate("MainWindow", "Fill Triangles", Q_NULLPTR));
+        checkBoxRefl->setText(QApplication::translate("MainWindow", "Reflection Lines", Q_NULLPTR));
         label->setText(QApplication::translate("MainWindow", "Curvatures", Q_NULLPTR));
+        ComputeCurvature->setText(QApplication::translate("MainWindow", "Curvatures", Q_NULLPTR));
         Gaussian->setText(QApplication::translate("MainWindow", "Gaussian", Q_NULLPTR));
         Mean->setText(QApplication::translate("MainWindow", "Mean", Q_NULLPTR));
+        LaplacianPush->setText(QApplication::translate("MainWindow", "Laplacian", Q_NULLPTR));
         tabWidget->setTabText(tabWidget->indexOf(tabRender), QApplication::translate("MainWindow", "Render", Q_NULLPTR));
         menu_File->setTitle(QApplication::translate("MainWindow", "&File", Q_NULLPTR));
     } // retranslateUi

@@ -16,6 +16,10 @@ public:
 
 	void loadMesh(const QString &filename);
 	void setPolygonMode(bool bFill);
+    void compute_curvatures();
+    void select_gauss_mean(bool b);
+    void set_reflection_lines(bool b);
+    void laplacian_operator();
 
 protected:
 	void initializeGL();
@@ -31,6 +35,14 @@ private:
 
 private:
 	bool bPolygonFill;
+
+    //curvatures
+    bool curvtures_active = false;
+    bool select_gauss = true;
+    bool bReflectionLines =false;
+
+
+
 	float angleX, angleY, distance;
 	QPoint lastMousePos;
 
