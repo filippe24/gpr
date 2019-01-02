@@ -5,16 +5,16 @@
 
 int main(int argc, char *argv[])
 {
-	QApplication a(argc, argv);
-	MainWindow w;
+    QApplication a(argc, argv);
+    MainWindow w;
 
-	QSurfaceFormat format;
-	format.setDepthBufferSize(24);
-	format.setVersion(3, 1);
-	format.setProfile(QSurfaceFormat::CoreProfile);
-	QSurfaceFormat::setDefaultFormat(format);
+    QSurfaceFormat format;
+//    format.setDepthBufferSize(24);
+//    format.setVersion(3, 3);
+//    format.setProfile(QSurfaceFormat::CoreProfile);
+    QSurfaceFormat::setDefaultFormat(format);
 
-	w.show();
+    w.show();
 
-	return a.exec();
+    return a.exec();
 }

@@ -29,6 +29,7 @@ public:
 	void buildCube();
 
 	bool init(QOpenGLShaderProgram *program);
+    bool buildMesh();
 	void destroy();
 
 	void render(QOpenGLFunctions &gl);
@@ -50,11 +51,20 @@ public:
     void applyLaplacian();
 
 
+
+    //COMUNICATION AND UPDATES:
+    void setLambda(float value);
+    void setDefault();
+
+
+
 private:
     void buildReplicatedVertices(vector<QVector3D> &replicatedVertices, vector<QVector3D> &normals, vector<unsigned int> &perFaceTriangles, vector<QVector2D> &replicatedColors);
     void fillVBOs(vector<QVector3D> &replicatedVertices, vector<QVector3D> &normals, vector<unsigned int> &perFaceTriangles, vector<QVector2D> &replicatedColors);
 
 private:
+    QOpenGLShaderProgram *active_program;
+
 	vector<QVector3D> vertices;
 	vector<int> triangles;
 
@@ -64,8 +74,12 @@ private:
     QOpenGLBuffer vboCurvatureColors, vboColorGauss, vboColorMean;
 
 
-    void setDefault();
 
+
+
+    //FUNCTION GENERAL USAGE:
+    void computeRing(vector<uint> &ring, uint ver);
+    float computeCotangent(uint ver, vector<uint> ring, uint r, bool alternative = false);
 
 
     //LAB 1: Gaussian and Mean Curvatures:
@@ -76,11 +90,21 @@ private:
 
 
     //LAB 2: Laplacian operators
+    vector<QVector3D> original_vertices;
+
     vector<QVector3D> laplace_operators;
     vector<QVector3D> laplace_vertices;
     vector<QVector3D> old_vertices;
     bool laplacianON = false;
     float lambda = 1.0;
+    enum WeightType
+    {
+        UNIFORM,
+        COTANGENT
+    };
+    WeightType current_weight_type = WeightType::UNIFORM;
+    float computeWeight(int v, vector<uint> ring, uint r, bool cotang_type = false);
+
 
 
 };

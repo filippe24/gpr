@@ -18,7 +18,7 @@ const float maxDistanceCamera = 3.0f;
 
 GLWidget::GLWidget(QWidget *parent) : QOpenGLWidget(parent), bPolygonFill(true), angleX(0.0f), angleY(0.0f), distance(2.0f)
 {
-	program = NULL;
+    program = NULL;
     QSurfaceFormat format;
     format.setDepthBufferSize(24);
     format.setVersion(3, 3);
@@ -227,5 +227,13 @@ void GLWidget::laplacian_operator()
 {
     mesh.computeLaplacianOperator();
     mesh.applyLaplacian();
+    makeCurrent();
+    mesh.buildMesh();
+    doneCurrent();
     update();
+}
+
+TriangleMesh& GLWidget::accesMesh()
+{
+    return mesh;
 }

@@ -108,58 +108,76 @@ void TriangleMesh::buildCube()
 
 bool TriangleMesh::init(QOpenGLShaderProgram *program)
 {
-	vector<QVector3D> replicatedVertices, normals;
-	vector<unsigned int> perFaceTriangles;
-
-    vector<QVector2D> replicatedColors;
+    active_program = program;
 
     computeCornerTables();
     computeVertexCorners();
 
     principalCurvatures();
-//    computeLaplacianOperator();
-//    applyLaplacian(true);
+//    if(laplacianON)
+//    {
+//        computeLaplacianOperator();
+//        applyLaplacian();
+//    }
 
+
+    original_vertices = vertices;
+
+
+    return buildMesh();
+
+}
+
+bool TriangleMesh::buildMesh()
+{
+    vector<QVector3D> replicatedVertices, normals;
+    vector<unsigned int> perFaceTriangles;
+
+    vector<QVector2D> replicatedColors;
+
+    //BUILDING THE MESH
     buildReplicatedVertices(replicatedVertices, normals, perFaceTriangles, replicatedColors);
 
+    //defining the program
+    active_program->bind();
 
+    vao.destroy();
+    vao.create();
+    if(vao.isCreated())
+        vao.bind();
+    else
+        return false;
 
-	program->bind();
+    //vertices
+    vboVertices.destroy();
+    vboVertices.create();
+    if(vboVertices.isCreated())
+        vboVertices.bind();
+    else
+        return false;
+    vboVertices.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    active_program->enableAttributeArray(0);
+    active_program->setAttributeBuffer(0, GL_FLOAT, 0, 3, 0);
 
-	vao.destroy();
-	vao.create();
-	if(vao.isCreated())
-		vao.bind();
-	else
-		return false;
+    //normals
+    vboNormals.destroy();
+    vboNormals.create();
+    if(vboNormals.isCreated())
+        vboNormals.bind();
+    else
+        return false;
+    vboNormals.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    active_program->enableAttributeArray(1);
+    active_program->setAttributeBuffer(1, GL_FLOAT, 0, 3, 0);
 
-	vboVertices.destroy();
-	vboVertices.create();
-	if(vboVertices.isCreated())
-		vboVertices.bind();
-	else
-		return false;
-	vboVertices.setUsagePattern(QOpenGLBuffer::StaticDraw);
-	program->enableAttributeArray(0);
-	program->setAttributeBuffer(0, GL_FLOAT, 0, 3, 0);
-
-	vboNormals.destroy();
-	vboNormals.create();
-	if(vboNormals.isCreated())
-		vboNormals.bind();
-	else
-		return false;
-	vboNormals.setUsagePattern(QOpenGLBuffer::StaticDraw);
-	program->enableAttributeArray(1);
-	program->setAttributeBuffer(1, GL_FLOAT, 0, 3, 0);
-
-	eboTriangles.destroy();
-	eboTriangles.create();
-	if(eboTriangles.isCreated())
-		eboTriangles.bind();
-	else
-		return false;
-	eboTriangles.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    //triangles
+    eboTriangles.destroy();
+    eboTriangles.create();
+    if(eboTriangles.isCreated())
+        eboTriangles.bind();
+    else
+        return false;
+    eboTriangles.setUsagePattern(QOpenGLBuffer::StaticDraw);
 
 
     //curvatures colors vbo
@@ -170,41 +188,16 @@ bool TriangleMesh::init(QOpenGLShaderProgram *program)
     else
         return false;
     vboCurvatureColors.setUsagePattern(QOpenGLBuffer::StaticDraw);
-    program->enableAttributeArray(2);
-    program->setAttributeBuffer(2, GL_FLOAT, 0, 2, 0);
-
-//    //gaussian curvature vbo
-//    vboColorGauss.destroy();
-//    vboColorGauss.create();
-//    if(vboColorGauss.isCreated())
-//        vboColorGauss.bind();
-//    else
-//        return false;
-//    vboColorGauss.setUsagePattern(QOpenGLBuffer::StaticDraw);
-//    program->enableAttributeArray(2);
-//    program->setAttributeBuffer(2, GL_FLOAT, 0, 1, 0);
-
-//    //mean curvature vbo
-//    vboColorMean.destroy();
-//    vboColorMean.create();
-//    if(vboColorMean.isCreated())
-//        vboColorMean.bind();
-//    else
-//        return false;
-//    vboColorMean.setUsagePattern(QOpenGLBuffer::StaticDraw);
-//    program->enableAttributeArray(3);
-//    program->setAttributeBuffer(3, GL_FLOAT, 0, 1, 0);
-
-
-
+    active_program->enableAttributeArray(2);
+    active_program->setAttributeBuffer(2, GL_FLOAT, 0, 2, 0);
 
     fillVBOs(replicatedVertices, normals, perFaceTriangles, replicatedColors);
 
-	vao.release();
-	program->release();
+    vao.release();
+    active_program->release();
 
 
-	return true;
+    return true;
 }
 
 void TriangleMesh::destroy()
@@ -381,7 +374,7 @@ void TriangleMesh::computeVertexCorners()
 //    std::cout << "*****VERTEX CORNER ***** " <<std::endl;
 //    std::cout << " " <<std::endl;
     cornersVertices.resize(vertices.size());
-    for( uint v = 0; v < (int)vertices.size() ; v++)
+    for( uint v = 0; v < vertices.size() ; v++)
     {
         //COMPUTATION OF BOUNDING BOX
         if(v == 0)
@@ -425,6 +418,100 @@ void TriangleMesh::computeVertexCorners()
     boundingBoxMax = QVector3D(max_x, max_y, max_z);
 }
 
+
+
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~~~~~~~~USEFUL FUNCTIONS
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//COMPUTE THE RING OF THE SELECTED VERTEX ver
+void TriangleMesh::computeRing(vector<uint> &ring, uint ver)
+{
+    uint corner = uint(cornersVertices[ver]);
+
+    //first triangle
+    uint nex, prev ;
+    nex = next(corner);
+    prev = previous(corner);
+
+    uint vertNext = uint(corners[nex].c());
+//    int vertPrev = corners[uint(prev)].c();
+//    ring.push_back(vertPrev);
+    ring.push_back(vertNext);
+
+    uint newNext = opposites[prev];
+    uint newVertNext = corners[newNext].c();
+
+    while( newVertNext != vertNext)
+    {
+        uint newPrev = next(newNext);
+//        int newVertPrev = corners[uint(newPrev)].c();
+//        ring.push_back(newVertPrev);
+        ring.push_back(newVertNext);
+
+        newNext = opposites[newPrev];
+        newVertNext = corners[newNext].c();
+     }
+}
+
+//COMPUTE COTANGENT OF THE VERTEX ver AND THE RING VERTEX r
+//with the two opposite angle of the edge ver-r
+//return cotg(alpha) + cotg(beta)
+float TriangleMesh::computeCotangent(uint ver, vector<uint> ring, uint r, bool alternative)
+{
+    float alpha,beta = 0.0f;
+
+    uint v_beta = ring[r];
+    uint v_j = ring[r+1];
+    uint v_alpha = ring[r+2];
+
+    if( r == (ring.size()-2) )
+    {
+        v_beta = ring[r];
+        v_j = ring[r+1];
+        v_alpha = ring[0];
+    }
+    else if( r == (ring.size()-1) )
+    {
+        v_beta = ring[r];
+        v_j = ring[0];
+        v_alpha = ring[1];
+    }
+
+    glm::vec3 vert_i = glm::vec3(vertices[ver].x(), vertices[ver].y(), vertices[ver].z() );
+    glm::vec3 vert_beta = glm::vec3(vertices[v_beta].x(), vertices[v_beta].y(), vertices[v_beta].z() );
+    glm::vec3 vert_j = glm::vec3(vertices[v_j].x(), vertices[v_j].y(), vertices[v_j].z() );
+    glm::vec3 vert_alpha = glm::vec3(vertices[v_alpha].x(), vertices[v_alpha].y(), vertices[v_alpha].z() );
+
+
+    glm::vec3 vec_beta_1 = glm::normalize(vert_i - vert_beta);
+    glm::vec3 vec_beta_2 = glm::normalize(vert_j - vert_beta);
+
+    float cosine_beta = glm::dot(vec_beta_1,vec_beta_2);
+    beta = acos(cosine_beta);
+
+    glm::vec3 vec_alpha_1 = glm::normalize(vert_i - vert_alpha);
+    glm::vec3 vec_alpha_2 = glm::normalize(vert_j - vert_alpha);
+
+    float cosine_alpha = glm::dot(vec_alpha_1,vec_alpha_2);
+    alpha = acos(cosine_alpha);
+
+    //two different computation of cotang
+    float cotg_sum_b = 1.0f/tan(alpha) + 1.0f/tan(beta);
+    float cotg_sum = cos(alpha)/sin(alpha) + cos(beta)/tan(beta);
+
+    if(alternative)
+        return cotg_sum_b;
+    else return cotg_sum;
+}
+
+
+
+
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~~~~~~~~CURVATURES~~~~~~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void TriangleMesh::principalCurvatures()
 {
 
@@ -443,41 +530,11 @@ void TriangleMesh::principalCurvatures()
     max_mean = 0.0;
     min_mean = 0.0;
 
-    for( int v = 0; v < vertices.size(); v++)
+    for( uint v = 0; v < vertices.size(); v++)
     {
 
-        std::vector<int> ring;
-        int corner = cornersVertices[v];
-
-        //first triangle
-        int nex, prev ;
-        nex = next(corner);
-        prev = previous(corner);
-
-        int vertNext = corners[nex].c();
-        int vertPrev = corners[prev].c();
-
-//        ring.push_back(vertPrev);
-        ring.push_back(vertNext);
-
-        int newNext = opposites[prev];
-        int newVertNext = corners[newNext].c();
-
-        while( newVertNext != vertNext)
-        {
-
-            int newPrev = next(newNext);
-
-
-            int newVertPrev = corners[newPrev].c();
-
-//            ring.push_back(newVertPrev);
-            ring.push_back(newVertNext);
-
-            newNext = opposites[newPrev];
-            newVertNext = corners[newNext].c();
-
-        }
+        std::vector<uint> ring;
+        computeRing(ring, v);
 
         std::vector<float> areasRing;
         std::vector<float> anglesRing;
@@ -486,12 +543,12 @@ void TriangleMesh::principalCurvatures()
         for( uint r = 0; r < ring.size(); r++ )
         {
 
-            int v2 = ring[r];
-            int v3 = ring[r+1];
+            uint v2 = uint(ring[r]);
+            uint v3 = uint(ring[r+1]);
             if( r == (ring.size()-1) )
             {
-                v2 = ring[r];
-                v3 = ring[0];
+                v2 = uint(ring[r]);
+                v3 = uint(ring[0]);
             }
 
             glm::vec3 vert1 = glm::vec3(vertices[v].x(), vertices[v].y(), vertices[v].z() );
@@ -546,48 +603,21 @@ void TriangleMesh::principalCurvatures()
 
         for( uint r = 0; r < ring.size(); r++ )
         {
-            float alpha,beta = 0.0f;
 
-            int v_beta = ring[r];
-            int v_j = ring[r+1];
-            int v_alpha = ring[r+2];
+            uint v_j = ring[r+1];
 
             if( r == (ring.size()-2) )
-            {
-                v_beta = ring[r];
                 v_j = ring[r+1];
-                v_alpha = ring[0];
-            }
             else if( r == (ring.size()-1) )
-            {
-                v_beta = ring[r];
                 v_j = ring[0];
-                v_alpha = ring[1];
-            }
 
             glm::vec3 vert_i = glm::vec3(vertices[v].x(), vertices[v].y(), vertices[v].z() );
-            glm::vec3 vert_beta = glm::vec3(vertices[v_beta].x(), vertices[v_beta].y(), vertices[v_beta].z() );
             glm::vec3 vert_j = glm::vec3(vertices[v_j].x(), vertices[v_j].y(), vertices[v_j].z() );
-            glm::vec3 vert_alpha = glm::vec3(vertices[v_alpha].x(), vertices[v_alpha].y(), vertices[v_alpha].z() );
 
-
-            glm::vec3 vec_beta_1 = glm::normalize(vert_i - vert_beta);
-            glm::vec3 vec_beta_2 = glm::normalize(vert_j - vert_beta);
-
-            float cosine_beta = glm::dot(vec_beta_1,vec_beta_2);
-            beta = acos(cosine_beta);
-
-            glm::vec3 vec_alpha_1 = glm::normalize(vert_i - vert_alpha);
-            glm::vec3 vec_alpha_2 = glm::normalize(vert_j - vert_alpha);
-
-            float cosine_alpha = glm::dot(vec_alpha_1,vec_alpha_2);
-            alpha = acos(cosine_alpha);
-
-            //two different computation of cotang
-            float cotg_sum_b = 1.0f/tan(alpha) + 1.0f/tan(beta);
-            float cotg_sum = cos(alpha)/sin(alpha) + cos(beta)/tan(beta);
 
             glm::vec3 vec_ij = vert_j -vert_i;
+
+            float cotg_sum = computeCotangent(v,ring,r);
 
             tot_sum = tot_sum + (cotg_sum *vec_ij);
         }
@@ -614,8 +644,14 @@ void TriangleMesh::principalCurvatures()
 }
 
 
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~ITERATIVE LAPLACIAN: SINGLE STEP COMPUTATION
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void TriangleMesh::computeLaplacianOperator()
 {
+
+    std::cout << "compute laplacian" << std::endl;
+
     laplace_operators.clear();
     laplace_vertices.clear();
     old_vertices = vertices;
@@ -623,7 +659,7 @@ void TriangleMesh::computeLaplacianOperator()
     for( int v = 0; v < vertices.size(); v++)
     {
         //create the ring
-        std::vector<int> ring;
+        std::vector<uint> ring;
         int corner = cornersVertices[v];
 
         int nex, prev ;
@@ -646,13 +682,17 @@ void TriangleMesh::computeLaplacianOperator()
 
 
         //TO DO: DEFINE THE WEIGHT FOR THE VERTICES
+
+        //1.uniform weights
         //access the ring
         glm::vec3 laplacian_v = glm::vec3(0.0,0.0,0.0);
-        float weight = 1.0f/ring.size();
+
         glm::vec3 vec_i = glm::vec3(vertices[v].x(),vertices[v].y(),vertices[v].z());
 
-        for(int r = 0; r < ring.size(); r++)
+        for(uint r = 0; r < ring.size(); r++)
         {
+            float weight = computeWeight(v,ring,r);
+
             int v_j = ring[r];
             glm::vec3 vec_j = glm::vec3(vertices[v_j].x(),vertices[v_j].y(),vertices[v_j].z());
             laplacian_v = laplacian_v + weight*vec_j;
@@ -663,21 +703,45 @@ void TriangleMesh::computeLaplacianOperator()
         glm::vec3 new_vert_i = vec_i + lambda*laplacian_v;
         laplace_vertices.push_back(QVector3D(new_vert_i.x,new_vert_i.y,new_vert_i.z));
     }
+    std::cout << "Computed Laplacian of " << vertices.size() << "vertices" << std::endl;
 }
+
+float TriangleMesh::computeWeight(int v, vector<uint> ring, uint r, bool cotang_type)
+{
+    if (current_weight_type == WeightType::UNIFORM)
+        return 1.0f/ring.size();
+    else {
+        float cotang_weight = computeCotangent(v,ring,r,false);
+        cotang_weight = cotang_weight/ring.size();
+        return cotang_weight;
+    }
+
+}
+
+
+
+
 
 
 //STILL HAVE TO DEFINE HOW TO GO BACK
 void TriangleMesh::applyLaplacian()
 {
+    std::cout << "apply laplacian" << std::endl;
     if(!laplacianON)
     {
+//        old_vertices = vertices;
         vertices = laplace_vertices;
         laplacianON = true;
+        std::cout << "laplacian activate :" << laplacianON << std::endl;
+        std::cout << " old vertices = " << old_vertices.size() << ",  new vertices = " << vertices.size() <<std::endl;
     }
     else
     {
         vertices = old_vertices;
         laplacianON = false;
+        std::cout << "laplacian deactivate :" << laplacianON << std::endl;
+        std::cout << " old vertices = " << old_vertices.size() << ",  new vertices = " << vertices.size() <<std::endl;
+
     }
 }
 
@@ -685,5 +749,12 @@ void TriangleMesh::applyLaplacian()
 void TriangleMesh::setDefault()
 {
     laplacianON = false;
+    vertices = original_vertices;
 
+}
+
+
+void TriangleMesh::setLambda(float value)
+{
+    lambda = value;
 }

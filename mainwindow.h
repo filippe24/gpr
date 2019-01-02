@@ -33,6 +33,17 @@ private slots:
 
     void on_LaplacianPush_clicked();
 
+    void on_lambdaSlider_actionTriggered(int action);
+
+//my functions
+    void on_defaultButton_clicked();
+
+    void on_defaultButton_2_clicked();
+
+private:
+    void setDefaultMesh();
+
+
 private:
 	Ui::MainWindow *ui;
 };

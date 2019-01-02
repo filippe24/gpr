@@ -21,6 +21,10 @@ public:
     void set_reflection_lines(bool b);
     void laplacian_operator();
 
+
+    //comunication
+    TriangleMesh& accesMesh();
+
 protected:
 	void initializeGL();
 	void resizeGL(int w, int h);
