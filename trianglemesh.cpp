@@ -114,11 +114,7 @@ bool TriangleMesh::init(QOpenGLShaderProgram *program)
     computeVertexCorners();
 
     principalCurvatures();
-//    if(laplacianON)
-//    {
-//        computeLaplacianOperator();
-//        applyLaplacian();
-//    }
+
 
 
     original_vertices = vertices;
@@ -225,7 +221,6 @@ void TriangleMesh::destroy()
     //laplacian
     laplace_vertices.clear();
     laplace_operators.clear();
-    laplacianON = false;
 
 }
 
@@ -508,14 +503,12 @@ float TriangleMesh::computeCotangent(uint ver, vector<uint> ring, uint r, bool a
 
 
 
-
+//~~~LAB~~~1~~~~~~~~~~~~~~~~~~~~~~~~~~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //~~~~~~~~~~~~~~~~~~~~CURVATURES~~~~~~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void TriangleMesh::principalCurvatures()
 {
-
-    laplacianON = false;
 
 
 
@@ -643,7 +636,7 @@ void TriangleMesh::principalCurvatures()
     }
 }
 
-
+//~~~LAB~~~2~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //~~~~~~~~~ITERATIVE LAPLACIAN: SINGLE STEP COMPUTATION
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -654,7 +647,6 @@ void TriangleMesh::computeLaplacianOperator()
 
     laplace_operators.clear();
     laplace_vertices.clear();
-    old_vertices = vertices;
 
     for( int v = 0; v < vertices.size(); v++)
     {
@@ -718,43 +710,51 @@ float TriangleMesh::computeWeight(int v, vector<uint> ring, uint r, bool cotang_
 
 }
 
-
-
-
-
-
-//STILL HAVE TO DEFINE HOW TO GO BACK
 void TriangleMesh::applyLaplacian()
 {
-    std::cout << "apply laplacian" << std::endl;
-    if(!laplacianON)
-    {
-//        old_vertices = vertices;
-        vertices = laplace_vertices;
-        laplacianON = true;
-        std::cout << "laplacian activate :" << laplacianON << std::endl;
-        std::cout << " old vertices = " << old_vertices.size() << ",  new vertices = " << vertices.size() <<std::endl;
-    }
-    else
-    {
-        vertices = old_vertices;
-        laplacianON = false;
-        std::cout << "laplacian deactivate :" << laplacianON << std::endl;
-        std::cout << " old vertices = " << old_vertices.size() << ",  new vertices = " << vertices.size() <<std::endl;
-
-    }
+    vertices = laplace_vertices;
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~SETTER~~~~~~~~~~~~~~~~~~COMUNICATION
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void TriangleMesh::setLaplacianMode(WeightType selectedType)
+{
+    current_weight_type = selectedType;
+}
 void TriangleMesh::setDefault()
 {
-    laplacianON = false;
     vertices = original_vertices;
 
 }
-
-
 void TriangleMesh::setLambda(float value)
 {
     lambda = value;
+}
+
+
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~GETTER~~~~~~~~~~~~~~~~~~COMUNICATION
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+int TriangleMesh::getVerticesSize()
+{
+    return vertices.size();
 }

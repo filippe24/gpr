@@ -48,6 +48,9 @@
       <property name="currentIndex">
        <number>1</number>
       </property>
+      <property name="tabBarAutoHide">
+       <bool>true</bool>
+      </property>
       <widget class="QWidget" name="tabCurvature">
        <attribute name="title">
         <string>Render</string>
@@ -141,7 +144,7 @@
       </widget>
       <widget class="QWidget" name="tabSmooth">
        <attribute name="title">
-        <string>Page</string>
+        <string>Smooth</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
@@ -152,9 +155,23 @@
          </widget>
         </item>
         <item>
+         <widget class="QLabel" name="iterativeLabel">
+          <property name="text">
+           <string>Iterative Smoothing</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QPushButton" name="LaplacianPush">
           <property name="text">
-           <string>Laplacian</string>
+           <string>Laplacian Uniform</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="LaplacianCotgPush">
+          <property name="text">
+           <string>Laplacian Cotang</string>
           </property>
          </widget>
         </item>
@@ -181,6 +198,20 @@
            </widget>
           </item>
          </layout>
+        </item>
+        <item>
+         <widget class="QLabel" name="globalLabel">
+          <property name="text">
+           <string>Global Smoothing</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="globalSmoothPush">
+          <property name="text">
+           <string>Smooth</string>
+          </property>
+         </widget>
         </item>
         <item>
          <spacer name="verticalSpacer_2">

@@ -223,8 +223,11 @@ void GLWidget::set_reflection_lines(bool b)
 }
 
 
-void GLWidget::laplacian_operator()
+void GLWidget::laplacian_operator(bool isCotangent)
 {
+    if(isCotangent)
+        mesh.setLaplacianMode(TriangleMesh::WeightType::COTANGENT);
+    else mesh.setLaplacianMode(TriangleMesh::WeightType::UNIFORM);
     mesh.computeLaplacianOperator();
     mesh.applyLaplacian();
     makeCurrent();
@@ -232,6 +235,19 @@ void GLWidget::laplacian_operator()
     doneCurrent();
     update();
 }
+
+
+
+//lab3: one step smoothing
+void GLWidget::global_smoothing()
+{
+    matrixClass = geomfunctions();
+    matrixClass.buildMatrixA(mesh);
+}
+
+
+
+
 
 TriangleMesh& GLWidget::accesMesh()
 {

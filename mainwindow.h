@@ -40,6 +40,10 @@ private slots:
 
     void on_defaultButton_2_clicked();
 
+    void on_LaplacianCotgPush_clicked();
+
+    void on_globalSmoothPush_clicked();
+
 private:
     void setDefaultMesh();
 

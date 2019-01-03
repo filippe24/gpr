@@ -6,7 +6,8 @@ QT += gui opengl
 
 CONFIG += c++11
 
-INCLUDEPATH += .
+INCLUDEPATH +=  Eigen\
+.
 
 # Input
 HEADERS += glwidget.h mainwindow.h \

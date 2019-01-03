@@ -9,6 +9,8 @@
 #include <QOpenGLBuffer>
 #include <QOpenGLShaderProgram>
 
+
+
 #include <glm/glm.hpp>
 
 
@@ -19,8 +21,14 @@ using namespace std;
 class TriangleMesh
 {
 
+
 public:
 	TriangleMesh();
+    enum WeightType
+    {
+        UNIFORM,
+        COTANGENT
+    };
 
 public:
 	void addVertex(const QVector3D &position);
@@ -55,6 +63,13 @@ public:
     //COMUNICATION AND UPDATES:
     void setLambda(float value);
     void setDefault();
+    void setLaplacianMode(WeightType selectedType);
+    int getVerticesSize();
+
+
+    //FUNCTION GENERAL USAGE:
+    void computeRing(vector<uint> &ring, uint ver);
+    float computeCotangent(uint ver, vector<uint> ring, uint r, bool alternative = false);
 
 
 
@@ -77,9 +92,7 @@ private:
 
 
 
-    //FUNCTION GENERAL USAGE:
-    void computeRing(vector<uint> &ring, uint ver);
-    float computeCotangent(uint ver, vector<uint> ring, uint r, bool alternative = false);
+
 
 
     //LAB 1: Gaussian and Mean Curvatures:
@@ -94,16 +107,12 @@ private:
 
     vector<QVector3D> laplace_operators;
     vector<QVector3D> laplace_vertices;
-    vector<QVector3D> old_vertices;
-    bool laplacianON = false;
     float lambda = 1.0;
-    enum WeightType
-    {
-        UNIFORM,
-        COTANGENT
-    };
+
     WeightType current_weight_type = WeightType::UNIFORM;
     float computeWeight(int v, vector<uint> ring, uint r, bool cotang_type = false);
+
+
 
 
 

@@ -54,10 +54,14 @@ public:
     QWidget *tabSmooth;
     QVBoxLayout *verticalLayout_2;
     QPushButton *defaultButton_2;
+    QLabel *iterativeLabel;
     QPushButton *LaplacianPush;
+    QPushButton *LaplacianCotgPush;
     QHBoxLayout *LmbdaLayout;
     QLabel *lambdaLabel;
     QSlider *lambdaSlider;
+    QLabel *globalLabel;
+    QPushButton *globalSmoothPush;
     QSpacerItem *verticalSpacer_2;
     QMenuBar *menuBar;
     QMenu *menu_File;
@@ -96,6 +100,7 @@ public:
         tabWidget->setSizePolicy(sizePolicy1);
         tabWidget->setMinimumSize(QSize(0, 0));
         tabWidget->setMaximumSize(QSize(16777215, 16777215));
+        tabWidget->setTabBarAutoHide(true);
         tabCurvature = new QWidget();
         tabCurvature->setObjectName(QStringLiteral("tabCurvature"));
         verticalLayout = new QVBoxLayout(tabCurvature);
@@ -168,10 +173,20 @@ public:
 
         verticalLayout_2->addWidget(defaultButton_2);
 
+        iterativeLabel = new QLabel(tabSmooth);
+        iterativeLabel->setObjectName(QStringLiteral("iterativeLabel"));
+
+        verticalLayout_2->addWidget(iterativeLabel);
+
         LaplacianPush = new QPushButton(tabSmooth);
         LaplacianPush->setObjectName(QStringLiteral("LaplacianPush"));
 
         verticalLayout_2->addWidget(LaplacianPush);
+
+        LaplacianCotgPush = new QPushButton(tabSmooth);
+        LaplacianCotgPush->setObjectName(QStringLiteral("LaplacianCotgPush"));
+
+        verticalLayout_2->addWidget(LaplacianCotgPush);
 
         LmbdaLayout = new QHBoxLayout();
         LmbdaLayout->setSpacing(6);
@@ -191,6 +206,16 @@ public:
 
 
         verticalLayout_2->addLayout(LmbdaLayout);
+
+        globalLabel = new QLabel(tabSmooth);
+        globalLabel->setObjectName(QStringLiteral("globalLabel"));
+
+        verticalLayout_2->addWidget(globalLabel);
+
+        globalSmoothPush = new QPushButton(tabSmooth);
+        globalSmoothPush->setObjectName(QStringLiteral("globalSmoothPush"));
+
+        verticalLayout_2->addWidget(globalSmoothPush);
 
         verticalSpacer_2 = new QSpacerItem(20, 421, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
@@ -234,9 +259,13 @@ public:
         Mean->setText(QApplication::translate("MainWindow", "Mean", Q_NULLPTR));
         tabWidget->setTabText(tabWidget->indexOf(tabCurvature), QApplication::translate("MainWindow", "Render", Q_NULLPTR));
         defaultButton_2->setText(QApplication::translate("MainWindow", "Default", Q_NULLPTR));
-        LaplacianPush->setText(QApplication::translate("MainWindow", "Laplacian", Q_NULLPTR));
+        iterativeLabel->setText(QApplication::translate("MainWindow", "Iterative Smoothing", Q_NULLPTR));
+        LaplacianPush->setText(QApplication::translate("MainWindow", "Laplacian Uniform", Q_NULLPTR));
+        LaplacianCotgPush->setText(QApplication::translate("MainWindow", "Laplacian Cotang", Q_NULLPTR));
         lambdaLabel->setText(QApplication::translate("MainWindow", "Lambda", Q_NULLPTR));
-        tabWidget->setTabText(tabWidget->indexOf(tabSmooth), QApplication::translate("MainWindow", "Page", Q_NULLPTR));
+        globalLabel->setText(QApplication::translate("MainWindow", "Global Smoothing", Q_NULLPTR));
+        globalSmoothPush->setText(QApplication::translate("MainWindow", "Smooth", Q_NULLPTR));
+        tabWidget->setTabText(tabWidget->indexOf(tabSmooth), QApplication::translate("MainWindow", "Smooth", Q_NULLPTR));
         menu_File->setTitle(QApplication::translate("MainWindow", "&File", Q_NULLPTR));
     } // retranslateUi
 

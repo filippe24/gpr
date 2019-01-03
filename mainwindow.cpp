@@ -71,11 +71,16 @@ void MainWindow::on_ComputeCurvature_clicked()
     ui->openGLWidget->compute_curvatures();
 }
 
+
+//~~~~~~~~~LAPLACIAN~~BUTTONS~~~~~~~~~~~~~
 void MainWindow::on_LaplacianPush_clicked()
 {
-    ui->openGLWidget->laplacian_operator();
+    ui->openGLWidget->laplacian_operator(false);
 }
-
+void MainWindow::on_LaplacianCotgPush_clicked()
+{
+    ui->openGLWidget->laplacian_operator(true);
+}
 
 
 void MainWindow::on_lambdaSlider_actionTriggered(int action)
@@ -92,4 +97,11 @@ void MainWindow::on_defaultButton_clicked()
 void MainWindow::on_defaultButton_2_clicked()
 {
     setDefaultMesh();
+}
+
+
+
+void MainWindow::on_globalSmoothPush_clicked()
+{
+    ui->openGLWidget->global_smoothing();
 }

@@ -5,6 +5,7 @@
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
 #include "trianglemesh.h"
+#include "geomfunctions.h"
 
 
 class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions
@@ -16,10 +17,17 @@ public:
 
 	void loadMesh(const QString &filename);
 	void setPolygonMode(bool bFill);
+
+    //lab1: curvatures
     void compute_curvatures();
     void select_gauss_mean(bool b);
     void set_reflection_lines(bool b);
-    void laplacian_operator();
+
+    //lab2: iterative smoothing
+    void laplacian_operator(bool isCotangent);
+
+    //lab3: one step smoothing
+    void global_smoothing();
 
 
     //comunication
@@ -45,14 +53,16 @@ private:
     bool select_gauss = true;
     bool bReflectionLines =false;
 
-
-
 	float angleX, angleY, distance;
-	QPoint lastMousePos;
+    QPoint lastMousePos;
 
 	QOpenGLShaderProgram *program;
-	TriangleMesh mesh;
 
+    //mesh
+    TriangleMesh mesh;
+
+    //spare Matrix
+    geomfunctions matrixClass;
 };
 
 #endif // GLWIDGET_H
