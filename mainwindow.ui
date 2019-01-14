@@ -28,7 +28,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
@@ -46,7 +46,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>2</number>
       </property>
       <property name="tabBarAutoHide">
        <bool>true</bool>
@@ -116,12 +116,38 @@
            </widget>
           </item>
           <item>
+           <widget class="QSlider" name="gaussianWeight">
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="value">
+             <number>2</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QRadioButton" name="Mean">
             <property name="enabled">
              <bool>true</bool>
             </property>
             <property name="text">
              <string>Mean</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSlider" name="meanWeight">
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="value">
+             <number>1</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
             </property>
            </widget>
           </item>
@@ -151,6 +177,13 @@
          <widget class="QPushButton" name="defaultButton_2">
           <property name="text">
            <string>Default</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="Line" name="line_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
           </property>
          </widget>
         </item>
@@ -200,6 +233,32 @@
          </layout>
         </item>
         <item>
+         <widget class="QComboBox" name="iterativeSelection">
+          <item>
+           <property name="text">
+            <string>Normal</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Bilaplacian</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Taubin</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item>
+         <widget class="Line" name="line">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QLabel" name="globalLabel">
           <property name="text">
            <string>Global Smoothing</string>
@@ -225,6 +284,32 @@
            </size>
           </property>
          </spacer>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tabParam">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>197</width>
+         <height>529</height>
+        </size>
+       </property>
+       <attribute name="title">
+        <string>Parm</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <widget class="QPushButton" name="pushButton">
+          <property name="text">
+           <string>PushButton</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>

@@ -1,8 +1,6 @@
-#include <iostream>
 #include "trianglemesh.h"
 
-#include <glm/glm.hpp>
-#include <math.h>
+
 
 #define PI 3.14159265
 
@@ -113,7 +111,7 @@ bool TriangleMesh::init(QOpenGLShaderProgram *program)
     computeCornerTables();
     computeVertexCorners();
 
-    principalCurvatures();
+//    principalCurvatures();
 
 
 
@@ -222,6 +220,9 @@ void TriangleMesh::destroy()
     laplace_vertices.clear();
     laplace_operators.clear();
 
+    //armonics
+    border_chain.clear();
+    lonely_corners.clear();
 }
 
 
@@ -253,10 +254,21 @@ void TriangleMesh::buildReplicatedVertices(vector<QVector3D> &replicatedVertices
 		perFaceTriangles.push_back(perFaceTriangles.size());
 		perFaceTriangles.push_back(perFaceTriangles.size());
 
-        replicatedColors.push_back( QVector2D(gaussianCurvature[triangles[i]], meanCurvature[triangles[i]]) );
-        replicatedColors.push_back( QVector2D(gaussianCurvature[triangles[i+1]], meanCurvature[triangles[i+1]]));
-        replicatedColors.push_back( QVector2D(gaussianCurvature[triangles[i+2]], meanCurvature[triangles[i+2]]));
-	}
+        if(curvatureON)
+        {
+            replicatedColors.push_back( QVector2D(gaussianCurvature[triangles[i]], meanCurvature[triangles[i]]) );
+            replicatedColors.push_back( QVector2D(gaussianCurvature[triangles[i+1]], meanCurvature[triangles[i+1]]));
+            replicatedColors.push_back( QVector2D(gaussianCurvature[triangles[i+2]], meanCurvature[triangles[i+2]]));
+        }
+        else
+        {
+            replicatedColors.push_back( QVector2D(0.0f, 0.0f));
+            replicatedColors.push_back( QVector2D(0.0f, 0.0f));
+            replicatedColors.push_back( QVector2D(0.0f, 0.0f));
+        }
+
+
+    }
 }
 
 void TriangleMesh::fillVBOs(vector<QVector3D> &replicatedVertices, vector<QVector3D> &normals, vector<unsigned int> &perFaceTriangles,  vector<QVector2D> &replicatedColors)
@@ -281,8 +293,63 @@ void TriangleMesh::fillVBOs(vector<QVector3D> &replicatedVertices, vector<QVecto
 }
 
 
+
+void TriangleMesh::updateVBOCurvatures()
+{
+    vector<QVector2D> replicatedColors;
+    for(unsigned int i=0; i<triangles.size(); i+=3)
+    {
+        if(curvatureON)
+        {
+            replicatedColors.push_back( QVector2D(gaussianCurvature[triangles[i]], meanCurvature[triangles[i]]) );
+            replicatedColors.push_back( QVector2D(gaussianCurvature[triangles[i+1]], meanCurvature[triangles[i+1]]));
+            replicatedColors.push_back( QVector2D(gaussianCurvature[triangles[i+2]], meanCurvature[triangles[i+2]]));
+        }
+        else
+        {
+            replicatedColors.push_back( QVector2D(0.0f, 0.0f));
+            replicatedColors.push_back( QVector2D(0.0f, 0.0f));
+            replicatedColors.push_back( QVector2D(0.0f, 0.0f));
+        }
+
+        vboCurvatureColors.bind();
+        vboCurvatureColors.allocate(&replicatedColors[0], 2 * sizeof(float) * replicatedColors.size());
+        vboCurvatureColors.release();
+
+
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~CORNER~~~AND~OPPOSITE~~~~~~~~~~~~~~TABLES~~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~AND~BORDER~~~~~~~~~~~
 void TriangleMesh::computeCornerTables()
 {
+
+
+    corners.clear();
+    opposites.clear();
+    oppositesVec.clear();
+    lonely_corners.clear();
+
     //compare all the triangles
     std::vector<int> edges;
 
@@ -327,6 +394,12 @@ void TriangleMesh::computeCornerTables()
     //opposite table
     oppositesVec.resize(corners.size());
     opposites.resize(corners.size());
+
+    //Border: check if a vertex has opposite
+    std::vector<bool> lonely;
+    for(uint i =0; i < corners.size(); i++)
+        {lonely.push_back(true);}
+
     for (uint i = 0; i < corners.size(); i++)
     {
         int a1 = corners[i].a();
@@ -343,6 +416,12 @@ void TriangleMesh::computeCornerTables()
 
             if( a1 == a2 and b1 == b2)
             {
+
+                //check for lonlienss :(
+                lonely[i] = false;
+                lonely[j] = false;
+
+
                 CornerEdge o1,o2;
                 o1.set(a1,b1,c2);
                 o2.set(a2,b2,c1);
@@ -356,7 +435,32 @@ void TriangleMesh::computeCornerTables()
 //                std::cout << "set the values of corners :" << std::endl << "ind:" << i << "  value:" << opposites[i] << std::endl << "ind: " << j << "  value:" << opposites[j] << std::endl;
             }
         }
-    }    
+
+    }
+
+    for(uint i =0; i < lonely.size(); i++)
+    {
+        if(lonely[i] == true)
+        {
+            lonely_corners.push_back(i);
+
+            uint a = uint(corners[i].a());
+            uint b = uint(corners[i].b());
+            uint a_test = uint(next(int(i)));
+            uint b_test = uint(previous(int(i)));
+
+            border_chain.push_back(a);
+            border_chain.push_back(b);
+            std::cout <<" lonley corner: " << i <<std::endl;
+            std::cout<< " edge     " << a << " -  " << b << std::endl ;
+            std::cout<< " edge test" << corners[a_test].c() << " -  " << corners[b_test].c() << std::endl ;
+
+        }
+    }
+    std::cout << " lonely list have size :" << lonely_corners.size() << std::endl;
+    std::cout << " border have size :" << border_chain.size() << std::endl;
+
+
 }
 
 //COMPUTE FOR EACH VERTEX ONE OF THE CORRISPONDENT CORNERS
@@ -411,11 +515,87 @@ void TriangleMesh::computeVertexCorners()
     }
     boundingBoxMin = QVector3D(min_x, min_y, min_z);
     boundingBoxMax = QVector3D(max_x, max_y, max_z);
+
+    std::cout << " done with vertex corners" << std::endl;
 }
 
 
 
 
+
+
+
+
+
+void TriangleMesh::parametrizeChain()
+{
+    parametrizeVertices.clear();
+
+    float circonf = float(2*M_PI);
+
+    //compute chein length
+    float totalDistance = 0;
+    std::vector<float> individualDistance;
+    for(uint b = 0; b < border_chain.size(); b++)
+    {
+        glm::vec3 v1,v2;
+        if(b == border_chain.size())
+        {
+            v1 = glm::vec3(vertices[b].x(),vertices[b].y(),vertices[b].z());
+            v2 = glm::vec3(vertices[0].x(),vertices[0].y(),vertices[0].z());
+            std::cout << " vertices :" << b << "  " << 0 ;
+        }
+        else
+        {
+            v1 = glm::vec3(vertices[b].x(),vertices[b].y(),vertices[b].z());
+            v2 = glm::vec3(vertices[b+1].x(),vertices[b+1].y(),vertices[b+1].z());
+            std::cout << " vertices :" << b << "  " << b+1 ;
+
+        }
+
+        float distance = glm::distance(v1,v2);
+        totalDistance = totalDistance + distance;
+        individualDistance.push_back(distance);
+        std::cout << "  have distance :" << distance << " and total distance is : " << totalDistance << std::endl;
+    }
+
+    //unit step on the circonference
+    float unit_step = totalDistance/circonf;
+    glm::vec2 center = glm::vec2(0.5,0.5);
+    float radius = 0.5;
+    //parametrize the border
+    for(uint b = 0; b < border_chain.size(); b++)
+    {
+        glm::vec2 pos;
+        float angle = individualDistance[b]*unit_step;
+        //first parametrize value on the right, on (1, 0.5) of my parametrization sapce
+        if(b == 0)
+            pos = center + glm::vec2(radius,0.0);
+        else pos =  center + glm::vec2( sin(angle)*radius , cos(angle)*radius );
+
+        parametrizeVertices.push_back(pos);
+
+    }
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //~~~~~~~~~~~~~~~~~~~USEFULL FUNCTIONS
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -541,6 +721,16 @@ float TriangleMesh::computeAngle(glm::vec3 v_ang,glm::vec3 v_i, glm::vec3 v_j)
 
     return acos(glm::dot(v_ang_i, v_ang_j));
 }
+
+
+
+
+
+
+
+
+
+
 
 //~~~LAB~~~1~~~~~~~~~~~~~~~~~~~~~~~~~~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -675,11 +865,23 @@ void TriangleMesh::principalCurvatures()
     }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 //~~~LAB~~~2~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //~~~~~~~~~ITERATIVE LAPLACIAN: SINGLE STEP COMPUTATION
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void TriangleMesh::computeLaplacianOperator()
+void TriangleMesh::computeLaplacianOperator(float lambda_in)
 {
 
     std::cout << "compute laplacian" << std::endl;
@@ -687,32 +889,10 @@ void TriangleMesh::computeLaplacianOperator()
     laplace_operators.clear();
     laplace_vertices.clear();
 
-    for( int v = 0; v < vertices.size(); v++)
+    for( uint v = 0; v < vertices.size(); v++)
     {
-        //create the ring
         std::vector<uint> ring;
-        int corner = cornersVertices[v];
-
-        int nex, prev ;
-        nex = next(corner);
-        prev = previous(corner);
-
-        int vertNext = corners[nex].c();
-        ring.push_back(vertNext);
-
-        int newNext = opposites[prev];
-        int newVertNext = corners[newNext].c();
-
-        while( newVertNext != vertNext)
-        {
-            int newPrev = next(newNext);
-            ring.push_back(newVertNext);
-            newNext = opposites[newPrev];
-            newVertNext = corners[newNext].c();
-        }
-
-
-        //TO DO: DEFINE THE WEIGHT FOR THE VERTICES
+        computeRing(ring, v);
 
         //1.uniform weights
         //access the ring
@@ -721,6 +901,8 @@ void TriangleMesh::computeLaplacianOperator()
         glm::vec3 vec_i = glm::vec3(vertices[v].x(),vertices[v].y(),vertices[v].z());
 
 
+
+        //COMPUTATION OF THE LAPLACIAN UNIFORM OR COTANGENT
         float total_weight = 0;
         //UNIFORM:
         if (current_weight_type == WeightType::UNIFORM)
@@ -747,13 +929,12 @@ void TriangleMesh::computeLaplacianOperator()
                 glm::vec3 vec_j = glm::vec3(vertices[v_j].x(),vertices[v_j].y(),vertices[v_j].z());
                 laplacian_v = laplacian_v + weight*(vec_j);
 //                laplacian_v = laplacian_v + weight*(vec_i-vec_j);
-
             }
             laplacian_v = (laplacian_v/total_weight) - vec_i ;
 //            laplacian_v = (laplacian_v/total_weight) ;
 
-
         }
+
 
         laplace_operators.push_back(QVector3D(laplacian_v.x,laplacian_v.y,laplacian_v.z));
         glm::vec3 new_vert_i = vec_i + lambda*laplacian_v;
@@ -761,12 +942,81 @@ void TriangleMesh::computeLaplacianOperator()
     }
     std::cout << "Computed Laplacian of " << vertices.size() << "vertices" << std::endl;
 }
-
-
 void TriangleMesh::applyLaplacian()
 {
-    vertices = laplace_vertices;
+    computeLaplacianOperator(lambda);
+
+    if(current_iterative_type == IterativeType::NORMAL)
+        vertices = laplace_vertices;
+    else if(current_iterative_type == IterativeType::BILAPLACIAN)
+    {
+        vertices = laplace_vertices;
+        computeLaplacianOperator(-lambda);
+        vertices = laplace_vertices;
+    }
+    else if(current_iterative_type == IterativeType::TAUBIN)
+    {
+        vertices = laplace_vertices;
+        float Kpb = 0.1f;
+        float mu = 1.0f/(Kpb + (1.0f/lambda));
+        computeLaplacianOperator(mu);
+        vertices = laplace_vertices;
+
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+//~~~LAB~~~3~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~GLOBAL~~~~~~~~~~SMOOTHING
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void TriangleMesh::applyGlobalSmoothing()
+{
+    matrixClass = geomfunctions();
+    matrixClass.buildMatrixA();
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//~~~LAB~~~5~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~DISCRETE~HARMONIC~MAPPING
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

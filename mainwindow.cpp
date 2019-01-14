@@ -51,13 +51,22 @@ void MainWindow::setDefaultMesh()
 
 void MainWindow::on_Mean_clicked(bool checked)
 {
-    ui->openGLWidget->select_gauss_mean(checked);
+    if(checked)
+    {
+        ui->openGLWidget->set_selected_gauss(false);
+    }
+    else ui->openGLWidget->set_selected_gauss(true);
+
 
 }
 
 void MainWindow::on_Gaussian_clicked(bool checked)
 {
-    ui->openGLWidget->select_gauss_mean(not(checked));
+    if(checked)
+    {
+        ui->openGLWidget->set_selected_gauss(true);
+    }
+    else ui->openGLWidget->set_selected_gauss(false);
 }
 
 void MainWindow::on_checkBoxRefl_clicked(bool checked)
@@ -81,14 +90,18 @@ void MainWindow::on_LaplacianCotgPush_clicked()
 {
     ui->openGLWidget->laplacian_operator(true);
 }
+void MainWindow::on_iterativeSelection_activated(int index)
+{
+    ui->openGLWidget->accesMesh().setCurrentIterativeType(index);
+}
 
-
+//~~~~~~~~~LAMBDA~DEFINITION~~BUTTONS~~~~~~~~~~~~~
 void MainWindow::on_lambdaSlider_actionTriggered(int action)
 {
     ui->openGLWidget->accesMesh().setLambda(float(action/100.0f));
 }
 
-
+//~~~~~~~~~DEFAULT~~BUTTONS~~~~~~~~~~~~~
 void MainWindow::on_defaultButton_clicked()
 {
     setDefaultMesh();
@@ -100,8 +113,22 @@ void MainWindow::on_defaultButton_2_clicked()
 }
 
 
-
+//~~~~~~~~~GLOBAL~SMOOTH~~~~~~~~~~~~~
 void MainWindow::on_globalSmoothPush_clicked()
 {
     ui->openGLWidget->global_smoothing();
+}
+
+
+void MainWindow::on_gaussianWeight_sliderMoved(int position)
+{
+    ui->openGLWidget->gauss_weight = float(position)/100.0f;
+    ui->openGLWidget->update();
+}
+
+void MainWindow::on_meanWeight_sliderMoved(int position)
+{
+    ui->openGLWidget->mean_weight = float(position/100.0f);
+    ui->openGLWidget->update();
+
 }

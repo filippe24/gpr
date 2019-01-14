@@ -44,6 +44,13 @@ private slots:
 
     void on_globalSmoothPush_clicked();
 
+
+    void on_iterativeSelection_activated(int index);
+
+    void on_gaussianWeight_sliderMoved(int position);
+
+    void on_meanWeight_sliderMoved(int position);
+
 private:
     void setDefaultMesh();
 

@@ -5,7 +5,6 @@
 #include <Eigen/SparseCore>
 #include <Eigen/SparseCholesky>
 #include <iostream>
-#include "trianglemesh.h"
 
 
 
@@ -18,7 +17,7 @@ public:
     typedef Eigen::SparseMatrix<double> SparseMatrix; // declares a column-major sparse matrix type of double
     typedef Eigen::Triplet<double> T; // a small structure to hold a non zero as a triplet (i,j,value)
     geomfunctions();
-    void buildMatrixA(TriangleMesh &mesh);
+    void buildMatrixA();
 
 
 private:

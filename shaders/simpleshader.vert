@@ -14,47 +14,58 @@ out vec3 vPosView;
 
 uniform mat4 projection, modelview;
 uniform mat3 normalMatrix;
-uniform float min_gauss;
-uniform float max_gauss;
-uniform float min_mean;
-uniform float max_mean;
 
+//basic color
+uniform vec4 color;
+
+
+
+//curvatures
+uniform bool bCurvature = false;
 uniform bool select_gauss = false;
+uniform float min_gauss = 1.0f;
+uniform float max_gauss = 1.0f;
+uniform float min_mean = 1.0f;
+uniform float max_mean = 1.0f;
+uniform float gauss_weight = 0.2;
+uniform float mean_weight = 0.1;
+
 
 
 
 
 void main()
 {
-        //vPos = (modelview * vec4(position, 1.0)).xyz;
-        //vNormal = normalMatrix * normal;
-        vPosView = (modelview*vec4(position, 1)).xyz;
+        //basic
         vPos = position;
         vNormal = normalize(normalMatrix * normal);
-
+        vColor = color.xyz;
         gl_Position = projection * modelview * vec4(position, 1.0);
 
+        //reflection lines
+        vec4 positionView = modelview*vec4(position, 1);
+        vPosView = positionView.xyz;
 
+        if(bCurvature)
+        {
+            //GAUSSIAN MEAN COLORS:
+            float gauss_var = (max_gauss - min_gauss)*0.3;
 
-        //GAUSSIAN MEAN COLORS:
-        float gauss_var = (max_gauss - min_gauss)*0.3;
+            //TODO: define the right balance between mean and variance it works ok for the bunny
+            float gauss_curv = (curvature_colors.x - min_gauss)/((max_gauss - min_gauss)*gauss_weight);
+            float mean_curv = (curvature_colors.y - min_mean)/((max_mean - min_mean)*mean_weight);
 
-        //TODO: define the right balance between mean and variance it works ok for the bunny
-        float gauss_curv = (curvature_colors.x - min_gauss)/((max_gauss - min_gauss)*0.2);
-        float mean_curv = (curvature_colors.y - min_mean)/((max_mean - min_mean)*0.1);
+            vec3 col1 = vec3(1,0,0);
+            vec3 col2 = vec3(0,0,1);
+            vec3 col3 = vec3(0,1,0);
 
-        vec3 col1 = vec3(1,0,0);
-        vec3 col2 = vec3(0,0,1);
-        vec3 col3 = vec3(0,1,0);
-
-        vec3 gauss_color = mix(col1,col2, gauss_curv);
-        vec3 mean_color = mix(col3,col1, mean_curv);
-        if(select_gauss)
-            vColor = gauss_color;
-        else
-            vColor = mean_color;
-        //vColor = vec3((1.0 - curvature_colors.x/3.0), (1.0 - curvature_colors.x/3.0), (1.0 - curvature_colors.x/3.0) );
-        //vColor = vec3((1.0 - curvature_colors.y/3.0), (1.0 - curvature_colors.y/3.0), (1.0 - curvature_colors.y/3.0) );
+            vec3 gauss_color = mix(col1,col2, gauss_curv);
+            vec3 mean_color = mix(col3,col1, mean_curv);
+            if(select_gauss)
+                vColor = gauss_color;
+            else
+                vColor = mean_color;
+        }
 
 }
 

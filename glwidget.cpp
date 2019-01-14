@@ -74,8 +74,6 @@ void GLWidget::resizeGL(int w, int h)
 void GLWidget::paintGL()
 {
 
-    std::cout << "PAINT GL" << std::endl;
-
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	program->bind();
@@ -94,8 +92,11 @@ void GLWidget::paintGL()
         program->setUniformValue("max_gauss", mesh.max_gauss);
         program->setUniformValue("min_mean", mesh.min_mean);
         program->setUniformValue("max_mean", mesh.max_mean);
+
     }
 
+    program->setUniformValue("gauss_weight", gauss_weight);
+    program->setUniformValue("mean_weight", mean_weight);
 
 
 
@@ -197,21 +198,27 @@ void GLWidget::loadMesh(const QString &filename)
 			cout << "Could not create vbo" << endl;
 			QApplication::quit();
 	}
+    curvtures_active = false;
+    mesh.curvatureON = curvtures_active;
 	doneCurrent();
 	update();
 }
 void GLWidget::compute_curvatures()
 {
     curvtures_active = !curvtures_active;
+    mesh.curvatureON = curvtures_active;
+    if(curvtures_active)
+    {
+        mesh.principalCurvatures();
+        mesh.updateVBOCurvatures();
+    }
     update();
 }
 
-void GLWidget::select_gauss_mean(bool b)
+void GLWidget::set_selected_gauss(bool b)
 {
     select_gauss = b;
     update();
-    std::cout << " print gauss ?? " << b << std::endl;
-
     std::cout << " gauss max: " << mesh.max_gauss << ", gauss min: " << mesh.min_gauss << ".  mean max:" << mesh.max_mean << ", mean min: " << mesh.min_mean << std::endl;
 }
 
@@ -228,7 +235,6 @@ void GLWidget::laplacian_operator(bool isCotangent)
     if(isCotangent)
         mesh.setLaplacianMode(TriangleMesh::WeightType::COTANGENT);
     else mesh.setLaplacianMode(TriangleMesh::WeightType::UNIFORM);
-    mesh.computeLaplacianOperator();
     mesh.applyLaplacian();
     makeCurrent();
     mesh.buildMesh();
@@ -241,8 +247,7 @@ void GLWidget::laplacian_operator(bool isCotangent)
 //lab3: one step smoothing
 void GLWidget::global_smoothing()
 {
-    matrixClass = geomfunctions();
-    matrixClass.buildMatrixA(mesh);
+    mesh.applyGlobalSmoothing();
 }
 
 

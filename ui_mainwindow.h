@@ -14,6 +14,8 @@
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QButtonGroup>
 #include <QtWidgets/QCheckBox>
+#include <QtWidgets/QComboBox>
+#include <QtWidgets/QFrame>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
@@ -49,20 +51,28 @@ public:
     QVBoxLayout *Curvatures;
     QPushButton *ComputeCurvature;
     QRadioButton *Gaussian;
+    QSlider *gaussianWeight;
     QRadioButton *Mean;
+    QSlider *meanWeight;
     QSpacerItem *verticalSpacer;
     QWidget *tabSmooth;
     QVBoxLayout *verticalLayout_2;
     QPushButton *defaultButton_2;
+    QFrame *line_2;
     QLabel *iterativeLabel;
     QPushButton *LaplacianPush;
     QPushButton *LaplacianCotgPush;
     QHBoxLayout *LmbdaLayout;
     QLabel *lambdaLabel;
     QSlider *lambdaSlider;
+    QComboBox *iterativeSelection;
+    QFrame *line;
     QLabel *globalLabel;
     QPushButton *globalSmoothPush;
     QSpacerItem *verticalSpacer_2;
+    QWidget *tab;
+    QVBoxLayout *verticalLayout_4;
+    QVBoxLayout *verticalLayout_3;
     QMenuBar *menuBar;
     QMenu *menu_File;
 
@@ -148,11 +158,27 @@ public:
 
         Curvatures->addWidget(Gaussian);
 
+        gaussianWeight = new QSlider(tabCurvature);
+        gaussianWeight->setObjectName(QStringLiteral("gaussianWeight"));
+        gaussianWeight->setMinimum(1);
+        gaussianWeight->setValue(2);
+        gaussianWeight->setOrientation(Qt::Horizontal);
+
+        Curvatures->addWidget(gaussianWeight);
+
         Mean = new QRadioButton(tabCurvature);
         Mean->setObjectName(QStringLiteral("Mean"));
         Mean->setEnabled(true);
 
         Curvatures->addWidget(Mean);
+
+        meanWeight = new QSlider(tabCurvature);
+        meanWeight->setObjectName(QStringLiteral("meanWeight"));
+        meanWeight->setMinimum(1);
+        meanWeight->setValue(1);
+        meanWeight->setOrientation(Qt::Horizontal);
+
+        Curvatures->addWidget(meanWeight);
 
 
         verticalLayout->addLayout(Curvatures);
@@ -172,6 +198,13 @@ public:
         defaultButton_2->setObjectName(QStringLiteral("defaultButton_2"));
 
         verticalLayout_2->addWidget(defaultButton_2);
+
+        line_2 = new QFrame(tabSmooth);
+        line_2->setObjectName(QStringLiteral("line_2"));
+        line_2->setFrameShape(QFrame::HLine);
+        line_2->setFrameShadow(QFrame::Sunken);
+
+        verticalLayout_2->addWidget(line_2);
 
         iterativeLabel = new QLabel(tabSmooth);
         iterativeLabel->setObjectName(QStringLiteral("iterativeLabel"));
@@ -207,6 +240,18 @@ public:
 
         verticalLayout_2->addLayout(LmbdaLayout);
 
+        iterativeSelection = new QComboBox(tabSmooth);
+        iterativeSelection->setObjectName(QStringLiteral("iterativeSelection"));
+
+        verticalLayout_2->addWidget(iterativeSelection);
+
+        line = new QFrame(tabSmooth);
+        line->setObjectName(QStringLiteral("line"));
+        line->setFrameShape(QFrame::HLine);
+        line->setFrameShadow(QFrame::Sunken);
+
+        verticalLayout_2->addWidget(line);
+
         globalLabel = new QLabel(tabSmooth);
         globalLabel->setObjectName(QStringLiteral("globalLabel"));
 
@@ -222,6 +267,19 @@ public:
         verticalLayout_2->addItem(verticalSpacer_2);
 
         tabWidget->addTab(tabSmooth, QString());
+        tab = new QWidget();
+        tab->setObjectName(QStringLiteral("tab"));
+        verticalLayout_4 = new QVBoxLayout(tab);
+        verticalLayout_4->setSpacing(6);
+        verticalLayout_4->setContentsMargins(11, 11, 11, 11);
+        verticalLayout_4->setObjectName(QStringLiteral("verticalLayout_4"));
+        verticalLayout_3 = new QVBoxLayout();
+        verticalLayout_3->setSpacing(6);
+        verticalLayout_3->setObjectName(QStringLiteral("verticalLayout_3"));
+
+        verticalLayout_4->addLayout(verticalLayout_3);
+
+        tabWidget->addTab(tab, QString());
 
         horizontalLayout->addWidget(tabWidget);
 
@@ -239,7 +297,7 @@ public:
 
         retranslateUi(MainWindow);
 
-        tabWidget->setCurrentIndex(1);
+        tabWidget->setCurrentIndex(2);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -263,9 +321,16 @@ public:
         LaplacianPush->setText(QApplication::translate("MainWindow", "Laplacian Uniform", Q_NULLPTR));
         LaplacianCotgPush->setText(QApplication::translate("MainWindow", "Laplacian Cotang", Q_NULLPTR));
         lambdaLabel->setText(QApplication::translate("MainWindow", "Lambda", Q_NULLPTR));
+        iterativeSelection->clear();
+        iterativeSelection->insertItems(0, QStringList()
+         << QApplication::translate("MainWindow", "Normal", Q_NULLPTR)
+         << QApplication::translate("MainWindow", "Bilaplacian", Q_NULLPTR)
+         << QApplication::translate("MainWindow", "Taubin", Q_NULLPTR)
+        );
         globalLabel->setText(QApplication::translate("MainWindow", "Global Smoothing", Q_NULLPTR));
         globalSmoothPush->setText(QApplication::translate("MainWindow", "Smooth", Q_NULLPTR));
         tabWidget->setTabText(tabWidget->indexOf(tabSmooth), QApplication::translate("MainWindow", "Smooth", Q_NULLPTR));
+        tabWidget->setTabText(tabWidget->indexOf(tab), QApplication::translate("MainWindow", "Page", Q_NULLPTR));
         menu_File->setTitle(QApplication::translate("MainWindow", "&File", Q_NULLPTR));
     } // retranslateUi
 
