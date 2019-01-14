@@ -417,7 +417,7 @@ void TriangleMesh::computeVertexCorners()
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//~~~~~~~~~~~~~~~~~~~~USEFUL FUNCTIONS
+//~~~~~~~~~~~~~~~~~~~USEFULL FUNCTIONS
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //COMPUTE THE RING OF THE SELECTED VERTEX ver
 void TriangleMesh::computeRing(vector<uint> &ring, uint ver)
@@ -478,30 +478,69 @@ float TriangleMesh::computeCotangent(uint ver, vector<uint> ring, uint r, bool a
     glm::vec3 vert_j = glm::vec3(vertices[v_j].x(), vertices[v_j].y(), vertices[v_j].z() );
     glm::vec3 vert_alpha = glm::vec3(vertices[v_alpha].x(), vertices[v_alpha].y(), vertices[v_alpha].z() );
 
+    beta = computeAngle(vert_beta,vert_i,vert_j);
 
-    glm::vec3 vec_beta_1 = glm::normalize(vert_i - vert_beta);
-    glm::vec3 vec_beta_2 = glm::normalize(vert_j - vert_beta);
+    alpha = computeAngle(vert_alpha,vert_i,vert_j);
 
-    float cosine_beta = glm::dot(vec_beta_1,vec_beta_2);
-    beta = acos(cosine_beta);
 
-    glm::vec3 vec_alpha_1 = glm::normalize(vert_i - vert_alpha);
-    glm::vec3 vec_alpha_2 = glm::normalize(vert_j - vert_alpha);
-
-    float cosine_alpha = glm::dot(vec_alpha_1,vec_alpha_2);
-    alpha = acos(cosine_alpha);
-
-    //two different computation of cotang
+    //4 different computation of cotang :,,,,((((
     float cotg_sum_b = 1.0f/tan(alpha) + 1.0f/tan(beta);
-    float cotg_sum = cos(alpha)/sin(alpha) + cos(beta)/tan(beta);
+    float cotg_sum = 0;
+    float cos_a = cos(alpha);
+    if(cos_a < 1.0f) cos_a = 1.0f;
+    if(cos_a < -1.0f) cos_a = -1.0f;
+    float sin_a = sin(alpha);
+    if(sin_a < 1.0f) cos_a = 1.0f;
+    if(sin_a < -1.0f) cos_a = -1.0f;
+    float cos_b= cos(alpha);
+    if(cos_b < 1.0f) cos_b = 1.0f;
+    if(cos_b < -1.0f) cos_b = -1.0f;
+    float sin_b = sin(beta);
+    if(sin_b < 1.0f) cos_b = 1.0f;
+    if(sin_b < -1.0f) cos_b = -1.0f;
+    if(sin_a != 0 && sin_b !=0)
+        cotg_sum = cos_a/sin_a + cos_b/sin_b;
+    else cotg_sum = 0.0f;
+    double cotg_sum_c = (tan(M_PI_2 - double(alpha))) - tan(M_PI_2 - double(beta));
+    float cotg_alpha = cotangentComputation(vert_alpha, vert_i, vert_j);
+    float cotg_beta = cotangentComputation(vert_beta, vert_i, vert_j);
+    float cotg_sum_d = cotg_alpha + cotg_beta;
 
     if(alternative)
         return cotg_sum_b;
     else return cotg_sum;
 }
 
+float TriangleMesh::cotangentComputation(glm::vec3 v_i,glm::vec3 v_ang, glm::vec3 v_j)
+{
+    glm::vec3 vec_ang_1 = (v_i - v_ang);
+    glm::vec3 vec_ang_2 = (v_j - v_ang);
+    glm::vec3 vec_cross = glm::cross(vec_ang_2,vec_ang_1);
+    float area = glm::length(vec_cross);
+    float sin = area/(glm::length(vec_ang_1)*glm::length(vec_ang_2));
+    if(sin > 1.0f)
+        sin = 1.0f;
+    if(sin < 0.0001f)
+        sin = 0.0001f;
 
+    float cos = sqrt(1 - sin*sin);
+    return cos/sin;
+}
 
+//float TriangleMesh::areaTriangle(int vi, int vj, int vk){
+//    return 0.5f*QVector3D::crossProduct((vertices[vj]-vertices[vi]),(vertices[vk]-vertices[vi])).length();
+//}
+
+float TriangleMesh::computeAngle(glm::vec3 v_ang,glm::vec3 v_i, glm::vec3 v_j)
+{
+    glm::vec3 v_ang_i = (v_i - v_ang);
+    glm::vec3 v_ang_j = (v_j - v_ang);
+
+    glm::normalize(v_ang_i);
+    glm::normalize(v_ang_j);
+
+    return acos(glm::dot(v_ang_i, v_ang_j));
+}
 
 //~~~LAB~~~1~~~~~~~~~~~~~~~~~~~~~~~~~~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -681,15 +720,40 @@ void TriangleMesh::computeLaplacianOperator()
 
         glm::vec3 vec_i = glm::vec3(vertices[v].x(),vertices[v].y(),vertices[v].z());
 
-        for(uint r = 0; r < ring.size(); r++)
-        {
-            float weight = computeWeight(v,ring,r);
 
-            int v_j = ring[r];
-            glm::vec3 vec_j = glm::vec3(vertices[v_j].x(),vertices[v_j].y(),vertices[v_j].z());
-            laplacian_v = laplacian_v + weight*vec_j;
+        float total_weight = 0;
+        //UNIFORM:
+        if (current_weight_type == WeightType::UNIFORM)
+        {
+            for(uint r = 0; r < ring.size(); r++)
+            {
+                float weight = 1.0f/ring.size();
+
+                uint v_j = ring[r];
+                glm::vec3 vec_j = glm::vec3(vertices[v_j].x(),vertices[v_j].y(),vertices[v_j].z());
+                laplacian_v = laplacian_v + weight*vec_j;
+            }
+            laplacian_v = laplacian_v - vec_i;
+
         }
-        laplacian_v = laplacian_v - vec_i;
+        else if (current_weight_type == WeightType::COTANGENT)  //COTANGENT
+        {
+            for(uint r = 0; r < ring.size(); r++)
+            {
+                float weight = computeCotangent(uint(v),ring,r,false);
+                total_weight = total_weight + weight;
+
+                uint v_j = ring[r];
+                glm::vec3 vec_j = glm::vec3(vertices[v_j].x(),vertices[v_j].y(),vertices[v_j].z());
+                laplacian_v = laplacian_v + weight*(vec_j);
+//                laplacian_v = laplacian_v + weight*(vec_i-vec_j);
+
+            }
+            laplacian_v = (laplacian_v/total_weight) - vec_i ;
+//            laplacian_v = (laplacian_v/total_weight) ;
+
+
+        }
 
         laplace_operators.push_back(QVector3D(laplacian_v.x,laplacian_v.y,laplacian_v.z));
         glm::vec3 new_vert_i = vec_i + lambda*laplacian_v;
@@ -698,17 +762,6 @@ void TriangleMesh::computeLaplacianOperator()
     std::cout << "Computed Laplacian of " << vertices.size() << "vertices" << std::endl;
 }
 
-float TriangleMesh::computeWeight(int v, vector<uint> ring, uint r, bool cotang_type)
-{
-    if (current_weight_type == WeightType::UNIFORM)
-        return 1.0f/ring.size();
-    else {
-        float cotang_weight = computeCotangent(v,ring,r,false);
-        cotang_weight = cotang_weight/ring.size();
-        return cotang_weight;
-    }
-
-}
 
 void TriangleMesh::applyLaplacian()
 {

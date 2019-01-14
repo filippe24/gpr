@@ -7,9 +7,10 @@ layout (location = 2) in vec2 curvature_colors;
 
 
 
-out vec3 fragNormal;
-out vec3 vertColor;
-out vec3 fragPos;
+out vec3 vNormal;
+out vec3 vColor;
+out vec3 vPos;
+out vec3 vPosView;
 
 uniform mat4 projection, modelview;
 uniform mat3 normalMatrix;
@@ -22,16 +23,20 @@ uniform bool select_gauss = false;
 
 
 
+
 void main()
 {
-        //fragPos = (modelview * vec4(position, 1.0)).xyz;
-        //fragNormal = normalMatrix * normal;
-
-        fragPos = position;
-        fragNormal = normal;
+        //vPos = (modelview * vec4(position, 1.0)).xyz;
+        //vNormal = normalMatrix * normal;
+        vPosView = (modelview*vec4(position, 1)).xyz;
+        vPos = position;
+        vNormal = normalize(normalMatrix * normal);
 
         gl_Position = projection * modelview * vec4(position, 1.0);
 
+
+
+        //GAUSSIAN MEAN COLORS:
         float gauss_var = (max_gauss - min_gauss)*0.3;
 
         //TODO: define the right balance between mean and variance it works ok for the bunny
@@ -45,12 +50,11 @@ void main()
         vec3 gauss_color = mix(col1,col2, gauss_curv);
         vec3 mean_color = mix(col3,col1, mean_curv);
         if(select_gauss)
-            vertColor = gauss_color;
+            vColor = gauss_color;
         else
-            vertColor = mean_color;
-
-//        vertColor = vec3((1.0 - curvature_colors.x/3.0), (1.0 - curvature_colors.x/3.0), (1.0 - curvature_colors.x/3.0) );
-//        vertColor = vec3((1.0 - curvature_colors.y/3.0), (1.0 - curvature_colors.y/3.0), (1.0 - curvature_colors.y/3.0) );
+            vColor = mean_color;
+        //vColor = vec3((1.0 - curvature_colors.x/3.0), (1.0 - curvature_colors.x/3.0), (1.0 - curvature_colors.x/3.0) );
+        //vColor = vec3((1.0 - curvature_colors.y/3.0), (1.0 - curvature_colors.y/3.0), (1.0 - curvature_colors.y/3.0) );
 
 }
 

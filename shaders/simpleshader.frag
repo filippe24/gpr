@@ -1,9 +1,10 @@
 #version 330 core
 
 
-in vec3 fragNormal;
-in vec3 vertColor;
-in vec3 fragPos;
+in vec3 vNormal;
+in vec3 vColor;
+in vec3 vPos;
+in vec3 vPosView;
 
 
 out vec4 fragColor;
@@ -29,12 +30,11 @@ void main()
 
     if(bCurvature)
     {
-        final_color = vec4(vertColor,1.0);
-
+        final_color = vec4(vColor,1.0);
     }
 
     if(bLighting)
-            fragColor = final_color * normalize(normalMatrix * fragNormal).z;
+            fragColor = (final_color)*vNormal.z;
     else
             fragColor = final_color;
 
@@ -42,23 +42,29 @@ void main()
     //object space
     if(bReflectionLines)
     {
-        vec3 V = -normalize(fragPos);
-        vec3 N = normalize(fragNormal);
+        vec3 R = reflect(vPosView,vNormal);
 
-        vec3 R = reflect(V, N);
+        vec3 selecter = normalize(vPos + R);
 
-        vec3 B = vec3 (1.0,0.0,0.0);
 
-        vec2 R2d = R.xy;
-        R2d = normalize(R2d);
+//        vec3 V = -normalize(vPos);
+//        vec3 N = normalize(vNormal);
 
-        float angle = acos(dot(R2d,B.xy));
+//        vec3 R = reflect(V, N);
 
-        float unit = PI/100.0;
-        int section = int(angle/unit);
-        if( fract(section/2.0) == 0)
+//        vec3 B = vec3 (1.0,0.0,0.0);
+
+//        vec2 R2d = R.xy;
+//        R2d = normalize(R2d);
+
+//        float angle = acos(dot(R2d,B.xy));
+
+//        float unit = PI/100.0;
+//        int section = int(angle/unit);
+
+        if( int(selecter.y*5)%2 == 0)
             fragColor = vec4(1.0,0.0,0.0,1.0);
-        else if(fract(section/2.0) != 0)
+        else if(int(selecter.y*5)%2 != 0)
             fragColor = vec4(1.0,1.0,0.0,1.0);
         else
             fragColor = vec4(0.0,1.0,0.0,1.0);

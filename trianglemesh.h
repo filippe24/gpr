@@ -70,6 +70,8 @@ public:
     //FUNCTION GENERAL USAGE:
     void computeRing(vector<uint> &ring, uint ver);
     float computeCotangent(uint ver, vector<uint> ring, uint r, bool alternative = false);
+    float cotangentComputation(glm::vec3 v_i,glm::vec3 v_ang, glm::vec3 v_j);
+    float computeAngle(glm::vec3 v_ang,glm::vec3 v_i, glm::vec3 v_j);
 
 
 
@@ -110,7 +112,6 @@ private:
     float lambda = 1.0;
 
     WeightType current_weight_type = WeightType::UNIFORM;
-    float computeWeight(int v, vector<uint> ring, uint r, bool cotang_type = false);
 
 
 
