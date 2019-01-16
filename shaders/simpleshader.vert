@@ -52,7 +52,9 @@ void main()
             float gauss_var = (max_gauss - min_gauss)*0.3;
 
             //TODO: define the right balance between mean and variance it works ok for the bunny
-            float gauss_curv = (curvature_colors.x - min_gauss)/((max_gauss - min_gauss)*gauss_weight);
+            float gauss_curv = (curvature_colors.x - min_gauss)/(((max_gauss*gauss_weight) - min_gauss));
+            if(gauss_curv > 1.0)
+                gauss_curv = 0.99;
             float mean_curv = (curvature_colors.y - min_mean)/((max_mean - min_mean)*mean_weight);
 
             vec3 col1 = vec3(1,0,0);

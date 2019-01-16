@@ -203,6 +203,8 @@ void GLWidget::loadMesh(const QString &filename)
 	doneCurrent();
 	update();
 }
+
+//lab1:curvatures
 void GLWidget::compute_curvatures()
 {
     curvtures_active = !curvtures_active;
@@ -214,7 +216,6 @@ void GLWidget::compute_curvatures()
     }
     update();
 }
-
 void GLWidget::set_selected_gauss(bool b)
 {
     select_gauss = b;
@@ -222,14 +223,14 @@ void GLWidget::set_selected_gauss(bool b)
     std::cout << " gauss max: " << mesh.max_gauss << ", gauss min: " << mesh.min_gauss << ".  mean max:" << mesh.max_mean << ", mean min: " << mesh.min_mean << std::endl;
 }
 
-
+//lab1-extra: reflection lines
 void GLWidget::set_reflection_lines(bool b)
 {
     bReflectionLines = b;
     update();
 }
 
-
+//lab2: iterative smoothing
 void GLWidget::laplacian_operator(bool isCotangent)
 {
     if(isCotangent)
@@ -244,9 +245,12 @@ void GLWidget::laplacian_operator(bool isCotangent)
 
 
 
-//lab3: one step smoothing
-void GLWidget::global_smoothing()
+//lab3: global smoothing
+void GLWidget::global_smoothing(bool isCotangent)
 {
+    if(isCotangent)
+        mesh.setLaplacianMode(TriangleMesh::WeightType::COTANGENT);
+    else mesh.setLaplacianMode(TriangleMesh::WeightType::UNIFORM);
     mesh.applyGlobalSmoothing();
     makeCurrent();
     mesh.buildMesh();
@@ -255,6 +259,20 @@ void GLWidget::global_smoothing()
 }
 
 
+
+//lab4: magnify
+void GLWidget::magnify_details(bool isCotangent)
+{
+    if(isCotangent)
+        mesh.setLaplacianMode(TriangleMesh::WeightType::COTANGENT);
+    else mesh.setLaplacianMode(TriangleMesh::WeightType::UNIFORM);
+    mesh.applyMagnify();
+    makeCurrent();
+    mesh.buildMesh();
+    doneCurrent();
+    update();
+
+}
 
 
 

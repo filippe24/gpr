@@ -29,9 +29,11 @@ public:
     //lab2: iterative smoothing
     void laplacian_operator(bool isCotangent);
 
-    //lab3: one step smoothing
-    void global_smoothing();
+    //lab3: global smoothing
+    void global_smoothing(bool isCotangent);
 
+    //lab4: magnify
+    void magnify_details(bool isCotangent);
 
     //comunication
     TriangleMesh& accesMesh();

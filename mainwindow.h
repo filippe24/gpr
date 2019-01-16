@@ -53,6 +53,20 @@ private slots:
 
     void on_parametrizeButton_clicked();
 
+    void on_globalSmoothCotangPush_clicked();
+
+    void on_percentageSpinBox_valueChanged(int arg1);
+
+    void on_magnifyUniform_clicked();
+
+    void on_magnifyCotangent_clicked();
+
+    void on_iteration1Spin_valueChanged(int arg1);
+
+    void on_iteration2Spin_valueChanged(int arg1);
+
+    void on_lambdaMagSpin_valueChanged(double arg1);
+
 private:
     void setDefaultMesh();
 

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>811</height>
+    <height>820</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -154,19 +154,6 @@
          </layout>
         </item>
         <item>
-         <widget class="Line" name="line_3">
-          <property name="frameShadow">
-           <enum>QFrame::Plain</enum>
-          </property>
-          <property name="lineWidth">
-           <number>4</number>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
          <spacer name="verticalSpacer">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -281,9 +268,147 @@
         <item>
          <widget class="QPushButton" name="globalSmoothPush">
           <property name="text">
-           <string>Smooth</string>
+           <string>Uniform</string>
           </property>
          </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="globalSmoothCotangPush">
+          <property name="text">
+           <string>Cotangent</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="percentageFixed">
+          <item>
+           <widget class="QLabel" name="percentageLabel">
+            <property name="text">
+             <string>Fixed</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="percentageSpinBox">
+            <property name="suffix">
+             <string/>
+            </property>
+            <property name="value">
+             <number>30</number>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>%</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="Line" name="line_3">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="magnifyLabel">
+          <property name="text">
+           <string>Magnify Details</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="magnifyUniform">
+          <property name="text">
+           <string>Uniform</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="magnifyCotangent">
+          <property name="text">
+           <string>Cotangent</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="iterations1">
+          <item>
+           <widget class="QLabel" name="iteration1Label">
+            <property name="text">
+             <string>1)  Iterations</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="iteration1Spin">
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>20</number>
+            </property>
+            <property name="value">
+             <number>15</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="iterations2">
+          <item>
+           <widget class="QLabel" name="iteration2Label">
+            <property name="text">
+             <string>2)  Times x</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="iteration2Spin">
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>5</number>
+            </property>
+            <property name="value">
+             <number>3</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="lambdaMag">
+          <item>
+           <widget class="QLabel" name="lambdaMagLabel">
+            <property name="text">
+             <string>Lambda</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="lambdaMagSpin">
+            <property name="decimals">
+             <number>1</number>
+            </property>
+            <property name="minimum">
+             <double>-1.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>3.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>0.500000000000000</double>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
         <item>
          <spacer name="verticalSpacer_2">
@@ -296,7 +421,7 @@
           <property name="sizeHint" stdset="0">
            <size>
             <width>20</width>
-            <height>30</height>
+            <height>20</height>
            </size>
           </property>
          </spacer>

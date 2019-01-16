@@ -15,6 +15,7 @@
 #include <QtWidgets/QButtonGroup>
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QComboBox>
+#include <QtWidgets/QDoubleSpinBox>
 #include <QtWidgets/QFrame>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QHeaderView>
@@ -26,6 +27,7 @@
 #include <QtWidgets/QRadioButton>
 #include <QtWidgets/QSlider>
 #include <QtWidgets/QSpacerItem>
+#include <QtWidgets/QSpinBox>
 #include <QtWidgets/QTabWidget>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
@@ -54,7 +56,6 @@ public:
     QSlider *gaussianWeight;
     QRadioButton *Mean;
     QSlider *meanWeight;
-    QFrame *line_3;
     QSpacerItem *verticalSpacer;
     QWidget *tabSmooth;
     QVBoxLayout *verticalLayout_2;
@@ -70,6 +71,24 @@ public:
     QFrame *line;
     QLabel *globalLabel;
     QPushButton *globalSmoothPush;
+    QPushButton *globalSmoothCotangPush;
+    QHBoxLayout *percentageFixed;
+    QLabel *percentageLabel;
+    QSpinBox *percentageSpinBox;
+    QLabel *label;
+    QFrame *line_3;
+    QLabel *magnifyLabel;
+    QPushButton *magnifyUniform;
+    QPushButton *magnifyCotangent;
+    QHBoxLayout *iterations1;
+    QLabel *iteration1Label;
+    QSpinBox *iteration1Spin;
+    QHBoxLayout *iterations2;
+    QLabel *iteration2Label;
+    QSpinBox *iteration2Spin;
+    QHBoxLayout *lambdaMag;
+    QLabel *lambdaMagLabel;
+    QDoubleSpinBox *lambdaMagSpin;
     QSpacerItem *verticalSpacer_2;
     QTabWidget *tabWidget_2;
     QWidget *tabParametrization;
@@ -83,7 +102,7 @@ public:
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QStringLiteral("MainWindow"));
-        MainWindow->resize(800, 811);
+        MainWindow->resize(800, 820);
         action_Quit = new QAction(MainWindow);
         action_Quit->setObjectName(QStringLiteral("action_Quit"));
         action_Open = new QAction(MainWindow);
@@ -186,14 +205,6 @@ public:
 
         verticalLayout->addLayout(Curvatures);
 
-        line_3 = new QFrame(tabCurvature);
-        line_3->setObjectName(QStringLiteral("line_3"));
-        line_3->setFrameShadow(QFrame::Plain);
-        line_3->setLineWidth(4);
-        line_3->setFrameShape(QFrame::HLine);
-
-        verticalLayout->addWidget(line_3);
-
         verticalSpacer = new QSpacerItem(20, 475, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
         verticalLayout->addItem(verticalSpacer);
@@ -273,7 +284,114 @@ public:
 
         verticalLayout_2->addWidget(globalSmoothPush);
 
-        verticalSpacer_2 = new QSpacerItem(20, 30, QSizePolicy::Minimum, QSizePolicy::Expanding);
+        globalSmoothCotangPush = new QPushButton(tabSmooth);
+        globalSmoothCotangPush->setObjectName(QStringLiteral("globalSmoothCotangPush"));
+
+        verticalLayout_2->addWidget(globalSmoothCotangPush);
+
+        percentageFixed = new QHBoxLayout();
+        percentageFixed->setSpacing(6);
+        percentageFixed->setObjectName(QStringLiteral("percentageFixed"));
+        percentageLabel = new QLabel(tabSmooth);
+        percentageLabel->setObjectName(QStringLiteral("percentageLabel"));
+
+        percentageFixed->addWidget(percentageLabel);
+
+        percentageSpinBox = new QSpinBox(tabSmooth);
+        percentageSpinBox->setObjectName(QStringLiteral("percentageSpinBox"));
+        percentageSpinBox->setValue(30);
+
+        percentageFixed->addWidget(percentageSpinBox);
+
+        label = new QLabel(tabSmooth);
+        label->setObjectName(QStringLiteral("label"));
+
+        percentageFixed->addWidget(label);
+
+
+        verticalLayout_2->addLayout(percentageFixed);
+
+        line_3 = new QFrame(tabSmooth);
+        line_3->setObjectName(QStringLiteral("line_3"));
+        line_3->setFrameShape(QFrame::HLine);
+        line_3->setFrameShadow(QFrame::Sunken);
+
+        verticalLayout_2->addWidget(line_3);
+
+        magnifyLabel = new QLabel(tabSmooth);
+        magnifyLabel->setObjectName(QStringLiteral("magnifyLabel"));
+
+        verticalLayout_2->addWidget(magnifyLabel);
+
+        magnifyUniform = new QPushButton(tabSmooth);
+        magnifyUniform->setObjectName(QStringLiteral("magnifyUniform"));
+
+        verticalLayout_2->addWidget(magnifyUniform);
+
+        magnifyCotangent = new QPushButton(tabSmooth);
+        magnifyCotangent->setObjectName(QStringLiteral("magnifyCotangent"));
+
+        verticalLayout_2->addWidget(magnifyCotangent);
+
+        iterations1 = new QHBoxLayout();
+        iterations1->setSpacing(6);
+        iterations1->setObjectName(QStringLiteral("iterations1"));
+        iteration1Label = new QLabel(tabSmooth);
+        iteration1Label->setObjectName(QStringLiteral("iteration1Label"));
+
+        iterations1->addWidget(iteration1Label);
+
+        iteration1Spin = new QSpinBox(tabSmooth);
+        iteration1Spin->setObjectName(QStringLiteral("iteration1Spin"));
+        iteration1Spin->setMinimum(1);
+        iteration1Spin->setMaximum(20);
+        iteration1Spin->setValue(15);
+
+        iterations1->addWidget(iteration1Spin);
+
+
+        verticalLayout_2->addLayout(iterations1);
+
+        iterations2 = new QHBoxLayout();
+        iterations2->setSpacing(6);
+        iterations2->setObjectName(QStringLiteral("iterations2"));
+        iteration2Label = new QLabel(tabSmooth);
+        iteration2Label->setObjectName(QStringLiteral("iteration2Label"));
+
+        iterations2->addWidget(iteration2Label);
+
+        iteration2Spin = new QSpinBox(tabSmooth);
+        iteration2Spin->setObjectName(QStringLiteral("iteration2Spin"));
+        iteration2Spin->setMinimum(1);
+        iteration2Spin->setMaximum(5);
+        iteration2Spin->setValue(3);
+
+        iterations2->addWidget(iteration2Spin);
+
+
+        verticalLayout_2->addLayout(iterations2);
+
+        lambdaMag = new QHBoxLayout();
+        lambdaMag->setSpacing(6);
+        lambdaMag->setObjectName(QStringLiteral("lambdaMag"));
+        lambdaMagLabel = new QLabel(tabSmooth);
+        lambdaMagLabel->setObjectName(QStringLiteral("lambdaMagLabel"));
+
+        lambdaMag->addWidget(lambdaMagLabel);
+
+        lambdaMagSpin = new QDoubleSpinBox(tabSmooth);
+        lambdaMagSpin->setObjectName(QStringLiteral("lambdaMagSpin"));
+        lambdaMagSpin->setDecimals(1);
+        lambdaMagSpin->setMinimum(-1);
+        lambdaMagSpin->setMaximum(3);
+        lambdaMagSpin->setValue(0.5);
+
+        lambdaMag->addWidget(lambdaMagSpin);
+
+
+        verticalLayout_2->addLayout(lambdaMag);
+
+        verticalSpacer_2 = new QSpacerItem(20, 20, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
         verticalLayout_2->addItem(verticalSpacer_2);
 
@@ -359,7 +477,17 @@ public:
          << QApplication::translate("MainWindow", "Taubin", Q_NULLPTR)
         );
         globalLabel->setText(QApplication::translate("MainWindow", "Global Smoothing", Q_NULLPTR));
-        globalSmoothPush->setText(QApplication::translate("MainWindow", "Smooth", Q_NULLPTR));
+        globalSmoothPush->setText(QApplication::translate("MainWindow", "Uniform", Q_NULLPTR));
+        globalSmoothCotangPush->setText(QApplication::translate("MainWindow", "Cotangent", Q_NULLPTR));
+        percentageLabel->setText(QApplication::translate("MainWindow", "Fixed", Q_NULLPTR));
+        percentageSpinBox->setSuffix(QString());
+        label->setText(QApplication::translate("MainWindow", "%", Q_NULLPTR));
+        magnifyLabel->setText(QApplication::translate("MainWindow", "Magnify Details", Q_NULLPTR));
+        magnifyUniform->setText(QApplication::translate("MainWindow", "Uniform", Q_NULLPTR));
+        magnifyCotangent->setText(QApplication::translate("MainWindow", "Cotangent", Q_NULLPTR));
+        iteration1Label->setText(QApplication::translate("MainWindow", "1)  Iterations", Q_NULLPTR));
+        iteration2Label->setText(QApplication::translate("MainWindow", "2)  Times x", Q_NULLPTR));
+        lambdaMagLabel->setText(QApplication::translate("MainWindow", "Lambda", Q_NULLPTR));
         parametrizeButton->setText(QApplication::translate("MainWindow", "Parametrize", Q_NULLPTR));
         tabWidget_2->setTabText(tabWidget_2->indexOf(tabParametrization), QApplication::translate("MainWindow", "Parametrization", Q_NULLPTR));
         tabWidget->setTabText(tabWidget->indexOf(tabSmooth), QApplication::translate("MainWindow", "Smooth", Q_NULLPTR));

@@ -12,7 +12,6 @@
 #include <iostream>
 #include <Eigen/SparseCore>
 #include <Eigen/SparseCholesky>
-#include "geomfunctions.h"
 
 
 
@@ -71,13 +70,18 @@ public:
     void setCurrentIterativeType(IterativeType t){current_iterative_type = t;}
     void setCurrentIterativeType(int t){current_iterative_type = IterativeType(t);}
 
-    void computeLaplacianOperator(float lambda_in);
-    glm::vec3 computeLaplacian(uint v, std::vector<uint> ring);
     void applyLaplacian();
 
 
     //LAB 3: Global Smoothing
     void applyGlobalSmoothing();
+    void setPercentage(int per){percentage = per;}
+
+    //LAB4: Magnify Details
+    void applyMagnify();
+    void setNumIterationMag(int iter){number_of_iteration = iter;}
+    void setMultiplierMag(int mult){mult_of_iteration = mult;}
+    void setParameterMag(float par){magnify_par = par;}
 
 
     //LAB 5: Compute parametrization
@@ -139,39 +143,50 @@ private:
     WeightType current_weight_type = WeightType::UNIFORM;
     IterativeType current_iterative_type = IterativeType::NORMAL;
 
+    void computeLaplacianOperator(float lambda_in, WeightType selected_weight_type);
+    glm::vec3 computeLaplacian(uint v, std::vector<uint> ring, WeightType selected_weight_type);
+
+    vector<QVector3D>  getLaplacianVertices(IterativeType type, WeightType weight_type, int iteration);
+
+
 
 
     //LAB 3: Global Smoothing
     //sparse Matrix
-//    geomfunctions matrixClass;
-    typedef Eigen::SparseMatrix<double> SparseMatrix; // declares a column-major sparse matrix type of double
+//    typedef Eigen::SparseMatrix<double> SparseMatrix; // declares a column-major sparse matrix type of double
     typedef Eigen::Triplet<double> Triplet; // a small structure to hold a non zero as a triplet (i,j,value)
 
-    Eigen::SparseMatrix<double> matrixA;
     std::vector<uint> fixedVertices;
     int percentage = 30;
 
 
-
     void buildMatrixA();
     vector<int> fixVertices();
-    bool isFixed(uint v );
+    std::vector<double> computeWeight(uint v , std::vector<uint> ring, double &total_weigth);
 
 
 
 
-    //LAB 4: Iterative Smoothing Optimization
+    //LAB 4: Magnify high frequency details
+    float magnify_par = 0.5f;
+    int number_of_iteration = 10;
+    int mult_of_iteration = 3;
+
+
+
+
 
 
 
     //LAB 5: DISCRETE HARMONIC MAPS:
     vector<uint> lonely_corners;
-    vector<uint> border_chain;
+    vector<pair<uint,uint>> border_chain;
+    vector<uint> border;
     vector<glm::vec2> parametrizeVertices;
 
     void parametrizeChain();
     void parametrizeOtherVertices();
-    bool isInBorderChain(uint vert);
+    void orderBorderChain();
 
 
 

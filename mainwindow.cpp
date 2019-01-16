@@ -116,16 +116,26 @@ void MainWindow::on_defaultButton_2_clicked()
 //~~~~~~~~~GLOBAL~SMOOTH~~~~~~~~~~~~~
 void MainWindow::on_globalSmoothPush_clicked()
 {
-    ui->openGLWidget->global_smoothing();
+    //uniform
+    ui->openGLWidget->global_smoothing(false);
+}
+void MainWindow::on_globalSmoothCotangPush_clicked()
+{
+    //cotangent
+    ui->openGLWidget->global_smoothing(true);
+}
+//set percentage
+void MainWindow::on_percentageSpinBox_valueChanged(int arg1)
+{
+    ui->openGLWidget->accesMesh().setPercentage(arg1);
 }
 
-
+//~~~~~~~~~CURVATURE~COLOR~~~~~~~~~
 void MainWindow::on_gaussianWeight_sliderMoved(int position)
 {
     ui->openGLWidget->gauss_weight = float(position)/100.0f;
     ui->openGLWidget->update();
 }
-
 void MainWindow::on_meanWeight_sliderMoved(int position)
 {
     ui->openGLWidget->mean_weight = float(position/100.0f);
@@ -133,7 +143,39 @@ void MainWindow::on_meanWeight_sliderMoved(int position)
 
 }
 
+//~~~~~~~~~PARAMETRIZE~~~~~~~~~~~~~
 void MainWindow::on_parametrizeButton_clicked()
 {
     ui->openGLWidget->accesMesh().computeParametrization();
+}
+
+
+
+//~~~~~~~~~MAGNIFY~~~~~~~~~~~~~
+void MainWindow::on_magnifyUniform_clicked()
+{
+    //uniform
+    ui->openGLWidget->magnify_details(false);
+}
+
+void MainWindow::on_magnifyCotangent_clicked()
+{
+    //uniform
+    ui->openGLWidget->magnify_details(true);
+}
+
+void MainWindow::on_iteration1Spin_valueChanged(int arg1)
+{
+    ui->openGLWidget->accesMesh().setNumIterationMag(arg1);
+}
+
+void MainWindow::on_iteration2Spin_valueChanged(int arg1)
+{
+    ui->openGLWidget->accesMesh().setMultiplierMag(arg1);
+
+}
+
+void MainWindow::on_lambdaMagSpin_valueChanged(double arg1)
+{
+    ui->openGLWidget->accesMesh().setParameterMag(arg1);
 }
