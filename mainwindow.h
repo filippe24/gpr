@@ -51,6 +51,8 @@ private slots:
 
     void on_meanWeight_sliderMoved(int position);
 
+    void on_parametrizeButton_clicked();
+
 private:
     void setDefaultMesh();
 

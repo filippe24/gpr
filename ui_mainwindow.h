@@ -54,6 +54,7 @@ public:
     QSlider *gaussianWeight;
     QRadioButton *Mean;
     QSlider *meanWeight;
+    QFrame *line_3;
     QSpacerItem *verticalSpacer;
     QWidget *tabSmooth;
     QVBoxLayout *verticalLayout_2;
@@ -70,9 +71,11 @@ public:
     QLabel *globalLabel;
     QPushButton *globalSmoothPush;
     QSpacerItem *verticalSpacer_2;
-    QWidget *tab;
+    QTabWidget *tabWidget_2;
+    QWidget *tabParametrization;
     QVBoxLayout *verticalLayout_4;
-    QVBoxLayout *verticalLayout_3;
+    QPushButton *parametrizeButton;
+    QSpacerItem *verticalSpacer_3;
     QMenuBar *menuBar;
     QMenu *menu_File;
 
@@ -80,7 +83,7 @@ public:
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QStringLiteral("MainWindow"));
-        MainWindow->resize(800, 600);
+        MainWindow->resize(800, 811);
         action_Quit = new QAction(MainWindow);
         action_Quit->setObjectName(QStringLiteral("action_Quit"));
         action_Open = new QAction(MainWindow);
@@ -103,7 +106,7 @@ public:
 
         tabWidget = new QTabWidget(centralWidget);
         tabWidget->setObjectName(QStringLiteral("tabWidget"));
-        QSizePolicy sizePolicy1(QSizePolicy::Preferred, QSizePolicy::Expanding);
+        QSizePolicy sizePolicy1(QSizePolicy::Preferred, QSizePolicy::Minimum);
         sizePolicy1.setHorizontalStretch(0);
         sizePolicy1.setVerticalStretch(0);
         sizePolicy1.setHeightForWidth(tabWidget->sizePolicy().hasHeightForWidth());
@@ -182,6 +185,14 @@ public:
 
 
         verticalLayout->addLayout(Curvatures);
+
+        line_3 = new QFrame(tabCurvature);
+        line_3->setObjectName(QStringLiteral("line_3"));
+        line_3->setFrameShadow(QFrame::Plain);
+        line_3->setLineWidth(4);
+        line_3->setFrameShape(QFrame::HLine);
+
+        verticalLayout->addWidget(line_3);
 
         verticalSpacer = new QSpacerItem(20, 475, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
@@ -262,24 +273,43 @@ public:
 
         verticalLayout_2->addWidget(globalSmoothPush);
 
-        verticalSpacer_2 = new QSpacerItem(20, 421, QSizePolicy::Minimum, QSizePolicy::Expanding);
+        verticalSpacer_2 = new QSpacerItem(20, 30, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
         verticalLayout_2->addItem(verticalSpacer_2);
 
-        tabWidget->addTab(tabSmooth, QString());
-        tab = new QWidget();
-        tab->setObjectName(QStringLiteral("tab"));
-        verticalLayout_4 = new QVBoxLayout(tab);
+        tabWidget_2 = new QTabWidget(tabSmooth);
+        tabWidget_2->setObjectName(QStringLiteral("tabWidget_2"));
+        QSizePolicy sizePolicy3(QSizePolicy::Expanding, QSizePolicy::Minimum);
+        sizePolicy3.setHorizontalStretch(0);
+        sizePolicy3.setVerticalStretch(0);
+        sizePolicy3.setHeightForWidth(tabWidget_2->sizePolicy().hasHeightForWidth());
+        tabWidget_2->setSizePolicy(sizePolicy3);
+        tabParametrization = new QWidget();
+        tabParametrization->setObjectName(QStringLiteral("tabParametrization"));
+        QSizePolicy sizePolicy4(QSizePolicy::Preferred, QSizePolicy::Preferred);
+        sizePolicy4.setHorizontalStretch(0);
+        sizePolicy4.setVerticalStretch(0);
+        sizePolicy4.setHeightForWidth(tabParametrization->sizePolicy().hasHeightForWidth());
+        tabParametrization->setSizePolicy(sizePolicy4);
+        verticalLayout_4 = new QVBoxLayout(tabParametrization);
         verticalLayout_4->setSpacing(6);
         verticalLayout_4->setContentsMargins(11, 11, 11, 11);
         verticalLayout_4->setObjectName(QStringLiteral("verticalLayout_4"));
-        verticalLayout_3 = new QVBoxLayout();
-        verticalLayout_3->setSpacing(6);
-        verticalLayout_3->setObjectName(QStringLiteral("verticalLayout_3"));
+        verticalLayout_4->setSizeConstraint(QLayout::SetDefaultConstraint);
+        parametrizeButton = new QPushButton(tabParametrization);
+        parametrizeButton->setObjectName(QStringLiteral("parametrizeButton"));
 
-        verticalLayout_4->addLayout(verticalLayout_3);
+        verticalLayout_4->addWidget(parametrizeButton);
 
-        tabWidget->addTab(tab, QString());
+        verticalSpacer_3 = new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::MinimumExpanding);
+
+        verticalLayout_4->addItem(verticalSpacer_3);
+
+        tabWidget_2->addTab(tabParametrization, QString());
+
+        verticalLayout_2->addWidget(tabWidget_2);
+
+        tabWidget->addTab(tabSmooth, QString());
 
         horizontalLayout->addWidget(tabWidget);
 
@@ -297,7 +327,8 @@ public:
 
         retranslateUi(MainWindow);
 
-        tabWidget->setCurrentIndex(2);
+        tabWidget->setCurrentIndex(1);
+        tabWidget_2->setCurrentIndex(0);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -329,8 +360,9 @@ public:
         );
         globalLabel->setText(QApplication::translate("MainWindow", "Global Smoothing", Q_NULLPTR));
         globalSmoothPush->setText(QApplication::translate("MainWindow", "Smooth", Q_NULLPTR));
+        parametrizeButton->setText(QApplication::translate("MainWindow", "Parametrize", Q_NULLPTR));
+        tabWidget_2->setTabText(tabWidget_2->indexOf(tabParametrization), QApplication::translate("MainWindow", "Parametrization", Q_NULLPTR));
         tabWidget->setTabText(tabWidget->indexOf(tabSmooth), QApplication::translate("MainWindow", "Smooth", Q_NULLPTR));
-        tabWidget->setTabText(tabWidget->indexOf(tab), QApplication::translate("MainWindow", "Page", Q_NULLPTR));
         menu_File->setTitle(QApplication::translate("MainWindow", "&File", Q_NULLPTR));
     } // retranslateUi
 

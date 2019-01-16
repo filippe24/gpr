@@ -527,74 +527,6 @@ void TriangleMesh::computeVertexCorners()
 
 
 
-void TriangleMesh::parametrizeChain()
-{
-    parametrizeVertices.clear();
-
-    float circonf = float(2*M_PI);
-
-    //compute chein length
-    float totalDistance = 0;
-    std::vector<float> individualDistance;
-    for(uint b = 0; b < border_chain.size(); b++)
-    {
-        glm::vec3 v1,v2;
-        if(b == border_chain.size())
-        {
-            v1 = glm::vec3(vertices[b].x(),vertices[b].y(),vertices[b].z());
-            v2 = glm::vec3(vertices[0].x(),vertices[0].y(),vertices[0].z());
-            std::cout << " vertices :" << b << "  " << 0 ;
-        }
-        else
-        {
-            v1 = glm::vec3(vertices[b].x(),vertices[b].y(),vertices[b].z());
-            v2 = glm::vec3(vertices[b+1].x(),vertices[b+1].y(),vertices[b+1].z());
-            std::cout << " vertices :" << b << "  " << b+1 ;
-
-        }
-
-        float distance = glm::distance(v1,v2);
-        totalDistance = totalDistance + distance;
-        individualDistance.push_back(distance);
-        std::cout << "  have distance :" << distance << " and total distance is : " << totalDistance << std::endl;
-    }
-
-    //unit step on the circonference
-    float unit_step = totalDistance/circonf;
-    glm::vec2 center = glm::vec2(0.5,0.5);
-    float radius = 0.5;
-    //parametrize the border
-    for(uint b = 0; b < border_chain.size(); b++)
-    {
-        glm::vec2 pos;
-        float angle = individualDistance[b]*unit_step;
-        //first parametrize value on the right, on (1, 0.5) of my parametrization sapce
-        if(b == 0)
-            pos = center + glm::vec2(radius,0.0);
-        else pos =  center + glm::vec2( sin(angle)*radius , cos(angle)*radius );
-
-        parametrizeVertices.push_back(pos);
-
-    }
-
-
-
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //~~~~~~~~~~~~~~~~~~~USEFULL FUNCTIONS
@@ -881,6 +813,7 @@ void TriangleMesh::principalCurvatures()
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //~~~~~~~~~ITERATIVE LAPLACIAN: SINGLE STEP COMPUTATION
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//loop through all the vertices and call computeLaplacian
 void TriangleMesh::computeLaplacianOperator(float lambda_in)
 {
 
@@ -894,54 +827,56 @@ void TriangleMesh::computeLaplacianOperator(float lambda_in)
         std::vector<uint> ring;
         computeRing(ring, v);
 
-        //1.uniform weights
-        //access the ring
-        glm::vec3 laplacian_v = glm::vec3(0.0,0.0,0.0);
-
-        glm::vec3 vec_i = glm::vec3(vertices[v].x(),vertices[v].y(),vertices[v].z());
-
-
-
-        //COMPUTATION OF THE LAPLACIAN UNIFORM OR COTANGENT
-        float total_weight = 0;
-        //UNIFORM:
-        if (current_weight_type == WeightType::UNIFORM)
-        {
-            for(uint r = 0; r < ring.size(); r++)
-            {
-                float weight = 1.0f/ring.size();
-
-                uint v_j = ring[r];
-                glm::vec3 vec_j = glm::vec3(vertices[v_j].x(),vertices[v_j].y(),vertices[v_j].z());
-                laplacian_v = laplacian_v + weight*vec_j;
-            }
-            laplacian_v = laplacian_v - vec_i;
-
-        }
-        else if (current_weight_type == WeightType::COTANGENT)  //COTANGENT
-        {
-            for(uint r = 0; r < ring.size(); r++)
-            {
-                float weight = computeCotangent(uint(v),ring,r,false);
-                total_weight = total_weight + weight;
-
-                uint v_j = ring[r];
-                glm::vec3 vec_j = glm::vec3(vertices[v_j].x(),vertices[v_j].y(),vertices[v_j].z());
-                laplacian_v = laplacian_v + weight*(vec_j);
-//                laplacian_v = laplacian_v + weight*(vec_i-vec_j);
-            }
-            laplacian_v = (laplacian_v/total_weight) - vec_i ;
-//            laplacian_v = (laplacian_v/total_weight) ;
-
-        }
-
+        glm::vec3 laplacian_v = computeLaplacian(v, ring);
 
         laplace_operators.push_back(QVector3D(laplacian_v.x,laplacian_v.y,laplacian_v.z));
+
+        glm::vec3 vec_i = glm::vec3(vertices[v].x(),vertices[v].y(),vertices[v].z());
         glm::vec3 new_vert_i = vec_i + lambda*laplacian_v;
         laplace_vertices.push_back(QVector3D(new_vert_i.x,new_vert_i.y,new_vert_i.z));
     }
     std::cout << "Computed Laplacian of " << vertices.size() << "vertices" << std::endl;
 }
+
+//single laplacian computation
+glm::vec3 TriangleMesh::computeLaplacian(uint v, std::vector<uint> ring)
+{
+    glm::vec3 laplacian_v = glm::vec3(0.0,0.0,0.0);
+    glm::vec3 vec_i = glm::vec3(vertices[v].x(),vertices[v].y(),vertices[v].z());
+    //COMPUTATION OF THE LAPLACIAN UNIFORM OR COTANGENT
+    float total_weight = 0;
+    //UNIFORM:
+    if (current_weight_type == WeightType::UNIFORM)
+    {
+        for(uint r = 0; r < ring.size(); r++)
+        {
+            float weight = 1.0f/ring.size();
+
+            uint v_j = ring[r];
+            glm::vec3 vec_j = glm::vec3(vertices[v_j].x(),vertices[v_j].y(),vertices[v_j].z());
+            laplacian_v = laplacian_v + weight*vec_j;
+        }
+        laplacian_v = laplacian_v - vec_i;
+
+    }
+    else if (current_weight_type == WeightType::COTANGENT)  //COTANGENT
+    {
+        for(uint r = 0; r < ring.size(); r++)
+        {
+            float weight = computeCotangent(uint(v),ring,r,false);
+            total_weight = total_weight + weight;
+
+            uint v_j = ring[r];
+            glm::vec3 vec_j = glm::vec3(vertices[v_j].x(),vertices[v_j].y(),vertices[v_j].z());
+            laplacian_v = laplacian_v + weight*(vec_j);
+//                laplacian_v = laplacian_v + weight*(vec_i-vec_j);
+        }
+        laplacian_v = (laplacian_v/total_weight) - vec_i ;
+//            laplacian_v = (laplacian_v/total_weight) ;
+    }
+    return laplacian_v;
+}
+//manage the application of the laplacians
 void TriangleMesh::applyLaplacian()
 {
     computeLaplacianOperator(lambda);
@@ -981,13 +916,183 @@ void TriangleMesh::applyLaplacian()
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void TriangleMesh::applyGlobalSmoothing()
 {
-    matrixClass = geomfunctions();
-    matrixClass.buildMatrixA();
-
+//    matrixClass = geomfunctions();
+//    matrixClass.buildMatrixA();
+    buildMatrixA();
+}
+//create the fixed list
+vector<int> TriangleMesh::fixVertices()
+{
+    fixedVertices.clear();
+    vector<int> fix_checking;
+    int iterator = 0;
+    vector<uint> unfixed_vertices;
+    for(uint v = 0; v < vertices.size(); v++)
+    {
+        int r = rand() % 100;
+        if(r < percentage)
+        {
+            fixedVertices.push_back(v);
+            fix_checking.push_back(-1);
+        }
+        else
+        {
+            fix_checking.push_back(iterator);
+            iterator++;
+            unfixed_vertices.push_back(v);
+        }
+    }
+    std::cout << " fixed  "<< fixedVertices.size() << "  vertices out of " << vertices.size() << "  with percentage : " << percentage << std::endl;
+    return fix_checking;
 }
 
+//check if a vertices is inside the fixed list
+bool TriangleMesh::isFixed(uint v )
+{
+    bool isFixed = false;
+    for(uint f = 0; f < fixedVertices.size(); f++)
+    {
+        if( v == f)
+            isFixed = true;
+    }
+    return isFixed;
+}
+
+//COMPUTATION
+void TriangleMesh::buildMatrixA()
+{
+
+    vector<int> fix_checking = fixVertices();
+
+    int n = int( 3*vertices.size() );
+
+    int fixed = int( 3*fixedVertices.size());
+
+    //matrix A
+    matrixA = Eigen::SparseMatrix<double>( n , (n-fixed) );
+    Eigen::SparseMatrix<double> vectorB = Eigen::SparseMatrix<double>(n, 3);
+
+    std::cout << " sizes : matrix A: " << n <<" x " << n-fixed << "  and vector B: "<< n << " x " << 3 << std::endl;
+
+    //coefficents T = Eigen::Triplet<double>
+    std::vector<Triplet> coefficentsA;
+    std::vector<Triplet> coefficentsB;
+    //vector of known values
+//    Eigen::VectorXd b(n);
+
+    //test:::
+    int max_column_i = 0;
+    int max_v = 0;
+
+    //loop over all the vertices:
+    for(uint v = 0; v < vertices.size(); v ++)
+    {
+        std::vector<uint> ring;
+        computeRing(ring, v);
 
 
+
+        int column_i = fix_checking[v];
+
+        //if a vertex is not fixed just put is own value in the column
+        if( fix_checking[v] != -1 )
+        {
+            //add its own position
+            Triplet own_value_x = Triplet( 3*int(v),   3*column_i,   -1 );
+            Triplet own_value_y = Triplet( 3*int(v)+1, 3*column_i+1, -1 );
+            Triplet own_value_z = Triplet( 3*int(v)+2, 3*column_i+2, -1 );
+
+            coefficentsA.push_back(own_value_x);
+            coefficentsA.push_back(own_value_y);
+            coefficentsA.push_back(own_value_z);
+
+            //test:::
+            if(3*v+2 > max_v) max_v = 3*v+2;
+            if(3*column_i+2 > max_column_i ) max_column_i = 3*column_i+2;
+
+            //if inside cactus, if outside no cactus
+            //add the weight to the one in the ring for each vertex
+            double w = 1.0/ring.size();
+            double bx_i = 0.0, by_i = 0.0, bz_i = 0.0;
+            for(uint r = 0; r < ring.size(); r++)
+            {
+                uint ri = ring[r];
+                int ring_column_i = fix_checking[ri];
+
+                //if the neighbour is fixed compute the value of B, don't add any column
+                if( fix_checking[ri] == -1 )
+                {
+                    bx_i = bx_i + double(vertices[ri].x());
+                    by_i = by_i + double(vertices[ri].y());
+                    bz_i = bz_i + double(vertices[ri].z());
+                }
+                else
+                {
+                    //else put the waight w in the right column
+                    Triplet new_value_x = Triplet( 3*int(v),   3*ring_column_i,   w);
+                    Triplet new_value_y = Triplet( 3*int(v)+1, 3*ring_column_i+1, w);
+                    Triplet new_value_z = Triplet( 3*int(v)+2, 3*ring_column_i+2, w);
+
+                    coefficentsA.push_back(new_value_x);
+                    coefficentsA.push_back(new_value_y);
+                    coefficentsA.push_back(new_value_z);
+                }
+
+            }
+
+            //fill the b vertex
+            Triplet new_b_value_x = Triplet( 3*int(v),   0, -w*(bx_i) );
+            Triplet new_b_value_y = Triplet( 3*int(v)+1, 1, -w*(by_i) );
+            Triplet new_b_value_z = Triplet( 3*int(v)+2, 2, -w*(bz_i) );
+
+            coefficentsB.push_back(new_b_value_x);
+            coefficentsB.push_back(new_b_value_y);
+            coefficentsB.push_back(new_b_value_z);
+
+
+        }
+    }
+//    std::cout <<" vertices done"<< std::endl;
+//    std::cout <<" check max values: vertex: " << max_v << "  column: "<< max_column_i << std::endl;
+
+//    for(uint i = 0; i < coefficentsB.size(); i++)
+//    {
+//        std::cout << " coeficent row: " << coefficentsB[i].row() << " , col: " << coefficentsB[i].col()  << " , val:" << coefficentsB[i].value() << std::endl;
+//    }
+    //fill the matrices
+    matrixA.setFromTriplets(coefficentsA.begin(), coefficentsA.end());
+    vectorB.setFromTriplets(coefficentsB.begin(), coefficentsB.end());
+
+
+    //remove the empty rows:
+
+
+
+
+
+    Eigen::SimplicialCholesky<Eigen::SparseMatrix<double>> solver;
+    solver.compute(matrixA.transpose()*matrixA);
+    Eigen::SparseMatrix<double> solution = solver.solve(matrixA.transpose()*vectorB);
+
+
+
+
+
+
+    //UPDATING THE VERTICES
+    for(uint v_i = 0; v_i < fix_checking.size(); v_i++)
+    {
+        //if is not fixed we replace the new vertex with the old one
+        if(fix_checking[v_i] != -1 )
+        {
+            uint index = fix_checking[v_i];
+            QVector3D new_vector = QVector3D( solution.coeff(3*index, 0), solution.coeff(3*index+1, 1), solution.coeff(3*index+2, 2)  );
+            vertices[v_i] = new_vector;
+        }
+
+    }
+
+}
 
 
 
@@ -1004,18 +1109,105 @@ void TriangleMesh::applyGlobalSmoothing()
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~DISCRETE~HARMONIC~MAPPING
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void TriangleMesh::computeParametrization()
+{
+    parametrizeChain();
+    parametrizeOtherVertices();
+}
+
+
+void TriangleMesh::parametrizeChain()
+{
+    parametrizeVertices.clear();
+
+    float circonf = float(2*M_PI);
+
+    //compute chein length
+    float totalDistance = 0;
+    std::vector<float> individualDistance;
+    for(uint b = 0; b < border_chain.size(); b++)
+    {
+        glm::vec3 v1,v2;
+        if(b == border_chain.size())
+        {
+            v1 = glm::vec3(vertices[b].x(),vertices[b].y(),vertices[b].z());
+            v2 = glm::vec3(vertices[0].x(),vertices[0].y(),vertices[0].z());
+            std::cout << " vertices :" << b << "  " << 0 ;
+        }
+        else
+        {
+            v1 = glm::vec3(vertices[b].x(),vertices[b].y(),vertices[b].z());
+            v2 = glm::vec3(vertices[b+1].x(),vertices[b+1].y(),vertices[b+1].z());
+            std::cout << " vertices :" << b << "  " << b+1 ;
+
+        }
+
+        float distance = glm::distance(v1,v2);
+        totalDistance = totalDistance + distance;
+        individualDistance.push_back(totalDistance);
+        std::cout << "  have distance :" << distance << " and total distance is : " << totalDistance << std::endl;
+    }
+
+    //unit step on the circonference
+    float unit_step = circonf/totalDistance;
+    glm::vec2 center = glm::vec2(0.5,0.5);
+    float radius = 0.5;
+    //parametrize the border
+    for(uint b = 0; b < border_chain.size(); b++)
+    {
+        glm::vec2 pos;
+        float angle = individualDistance[b]*unit_step;
+        //first parametrize value on the right, on (1, 0.5) of my parametrization sapce
+        if(b == 0)
+            pos = center + glm::vec2(radius,0.0);
+        else pos =  center + glm::vec2( cos(angle)*radius, sin(angle)*radius );
+
+        parametrizeVertices.push_back(pos);
+    }
+}
+
+
+void TriangleMesh::parametrizeOtherVertices()
+{
+
+
+    for(uint v = 0; v < vertices.size(); v++)
+    {
+        std::vector<glm::vec3> laplacians;
+        std::vector<glm::vec3> vertices;
+
+        float max_laplace = 0.0f;
+        float radius = 0.5;
+        //if it is not in the border chain
+        if(!isInBorderChain(v))
+        {
+               glm::vec3 vert = glm::vec3(vertices[v].x, vertices[v].y, vertices[v].z);
+               vertices.push_back(vert);
+               glm::vec3 laplacian = computeLaplacian(v, border_chain);
+               if ( glm::length(laplacian) > max_laplace )
+                   max_laplace = glm::length(laplacian);
+               laplacians.push_back(laplacian);
+
+        }
+    }
+
+}
 
 
 
 
+//check for each vertex vert if it is one of the border vertices
+bool TriangleMesh::isInBorderChain(uint vert)
+{
+    bool isInChain = false;
+    for(uint b = 0; b < border_chain.size(); b++)
+    {
+        if(vert ==  border_chain[b])
+            isInChain = true;
+    }
+    return isInChain;
 
-
-
-
-
-
-
-
+}
 
 
 

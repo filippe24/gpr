@@ -132,3 +132,8 @@ void MainWindow::on_meanWeight_sliderMoved(int position)
     ui->openGLWidget->update();
 
 }
+
+void MainWindow::on_parametrizeButton_clicked()
+{
+    ui->openGLWidget->accesMesh().computeParametrization();
+}

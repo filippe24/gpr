@@ -248,6 +248,10 @@ void GLWidget::laplacian_operator(bool isCotangent)
 void GLWidget::global_smoothing()
 {
     mesh.applyGlobalSmoothing();
+    makeCurrent();
+    mesh.buildMesh();
+    doneCurrent();
+    update();
 }
 
 
