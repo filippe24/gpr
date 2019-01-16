@@ -59,7 +59,8 @@ TriangleMesh::TriangleMesh() : vboVertices(QOpenGLBuffer::VertexBuffer),
 										 vboNormals(QOpenGLBuffer::VertexBuffer),
                                          eboTriangles(QOpenGLBuffer::IndexBuffer),
                                          vboColorGauss(QOpenGLBuffer::VertexBuffer),
-                                         vboColorMean(QOpenGLBuffer::VertexBuffer)
+                                         vboColorMean(QOpenGLBuffer::VertexBuffer),
+                                         vboTextureCoordinates(QOpenGLBuffer::VertexBuffer)
 {
 }
 
@@ -111,9 +112,9 @@ bool TriangleMesh::init(QOpenGLShaderProgram *program)
     computeCornerTables();
     computeVertexCorners();
 
+//    computeParametrization();
+
 //    principalCurvatures();
-
-
 
     original_vertices = vertices;
 
@@ -129,9 +130,11 @@ bool TriangleMesh::buildMesh()
     vector<unsigned int> perFaceTriangles;
 
     vector<QVector2D> replicatedColors;
+    vector<QVector2D> replicatedTextureCoord;
 
+    std::cout << " before building replicas " << std::endl;
     //BUILDING THE MESH
-    buildReplicatedVertices(replicatedVertices, normals, perFaceTriangles, replicatedColors);
+    buildReplicatedVertices(replicatedVertices, normals, perFaceTriangles, replicatedColors, replicatedTextureCoord);
 
     //defining the program
     active_program->bind();
@@ -186,7 +189,20 @@ bool TriangleMesh::buildMesh()
     active_program->enableAttributeArray(2);
     active_program->setAttributeBuffer(2, GL_FLOAT, 0, 2, 0);
 
-    fillVBOs(replicatedVertices, normals, perFaceTriangles, replicatedColors);
+
+
+    //textures  vbo
+    vboTextureCoordinates.destroy();
+    vboTextureCoordinates.create();
+    if(vboTextureCoordinates.isCreated())
+        vboTextureCoordinates.bind();
+    else
+        return false;
+    vboTextureCoordinates.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    active_program->enableAttributeArray(3);
+    active_program->setAttributeBuffer(3, GL_FLOAT, 0, 2, 0);
+
+    fillVBOs(replicatedVertices, normals, perFaceTriangles, replicatedColors, replicatedTextureCoord);
 
     vao.release();
     active_program->release();
@@ -201,6 +217,8 @@ void TriangleMesh::destroy()
 	vboVertices.destroy();
 	vboNormals.destroy();
 	eboTriangles.destroy();
+    vboTextureCoordinates.destroy();
+    vboCurvatureColors.destroy();
 
 
 	vertices.clear();
@@ -235,9 +253,10 @@ void TriangleMesh::render(QOpenGLFunctions &gl)
 	vao.release();
 }
 
-void TriangleMesh::buildReplicatedVertices(vector<QVector3D> &replicatedVertices, vector<QVector3D> &normals, vector<unsigned int> &perFaceTriangles, vector<QVector2D> &replicatedColors)
+void TriangleMesh::buildReplicatedVertices(vector<QVector3D> &replicatedVertices, vector<QVector3D> &normals, vector<unsigned int> &perFaceTriangles, vector<QVector2D> &replicatedColors, vector<QVector2D> &replicatedTextureCoordinates)
 {
 	normals.resize(triangles.size());
+    std::cout << " start with replicas" << std::endl;
 
 	for(unsigned int i=0; i<triangles.size(); i+=3)
 	{
@@ -268,11 +287,25 @@ void TriangleMesh::buildReplicatedVertices(vector<QVector3D> &replicatedVertices
             replicatedColors.push_back( QVector2D(0.0f, 0.0f));
         }
 
+        if(parametrizationON)
+        {
+            replicatedTextureCoordinates.push_back(parametrizeVertices[triangles[i]]);
+            replicatedTextureCoordinates.push_back(parametrizeVertices[triangles[i+1]]);
+            replicatedTextureCoordinates.push_back(parametrizeVertices[triangles[i+2]]);
+        }
+        else
+        {
+            replicatedTextureCoordinates.push_back( QVector2D(0.0f, 0.0f));
+            replicatedTextureCoordinates.push_back( QVector2D(0.0f, 0.0f));
+            replicatedTextureCoordinates.push_back( QVector2D(0.0f, 0.0f));
+        }
 
     }
+
+    std::cout << " done with replicas" << std::endl;
 }
 
-void TriangleMesh::fillVBOs(vector<QVector3D> &replicatedVertices, vector<QVector3D> &normals, vector<unsigned int> &perFaceTriangles,  vector<QVector2D> &replicatedColors)
+void TriangleMesh::fillVBOs(vector<QVector3D> &replicatedVertices, vector<QVector3D> &normals, vector<unsigned int> &perFaceTriangles,  vector<QVector2D> &replicatedColors, vector<QVector2D> &replicatedTextureCoordinates)
 {
 //    std::cout << "VBO: filling gaussian vbo, of size: "<< replicatedVertices.size()/3 << std::endl;
 	vboVertices.bind();
@@ -289,6 +322,10 @@ void TriangleMesh::fillVBOs(vector<QVector3D> &replicatedVertices, vector<QVecto
 
     vboCurvatureColors.bind();
     vboCurvatureColors.allocate(&replicatedColors[0], 2 * sizeof(float) * replicatedVertices.size());
+    vboCurvatureColors.release();
+
+    vboCurvatureColors.bind();
+    vboCurvatureColors.allocate(&replicatedTextureCoordinates[0], 2 * sizeof(float) * replicatedTextureCoordinates.size());
     vboCurvatureColors.release();
 
 }
@@ -315,6 +352,29 @@ void TriangleMesh::updateVBOCurvatures()
 
         vboCurvatureColors.bind();
         vboCurvatureColors.allocate(&replicatedColors[0], 2 * sizeof(float) * replicatedColors.size());
+        vboCurvatureColors.release();
+
+
+    }
+
+    vector<QVector2D> replicatedTextureCoordinates;
+    for(unsigned int i=0; i<triangles.size(); i+=3)
+    {
+        if(parametrizationON)
+        {
+            replicatedTextureCoordinates.push_back(parametrizeVertices[triangles[i]]);
+            replicatedTextureCoordinates.push_back(parametrizeVertices[triangles[i+1]]);
+            replicatedTextureCoordinates.push_back(parametrizeVertices[triangles[i+2]]);
+        }
+        else
+        {
+            replicatedTextureCoordinates.push_back( QVector2D(0.0f, 0.0f));
+            replicatedTextureCoordinates.push_back( QVector2D(0.0f, 0.0f));
+            replicatedTextureCoordinates.push_back( QVector2D(0.0f, 0.0f));
+        }
+
+        vboCurvatureColors.bind();
+        vboCurvatureColors.allocate(&replicatedTextureCoordinates[0], 2 * sizeof(float) * replicatedTextureCoordinates.size());
         vboCurvatureColors.release();
 
 
@@ -454,6 +514,10 @@ void TriangleMesh::computeCornerTables()
             couple.first = a;
             couple.second = b;
             border_chain.push_back(couple);
+
+            //put -1 as their opposite table value
+            opposites[i] = -1;
+
         }
     }
     std::cout << " lonely list have size :" << lonely_corners.size() << std::endl;
@@ -530,36 +594,317 @@ void TriangleMesh::computeVertexCorners()
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //~~~~~~~~~~~~~~~~~~~USEFULL FUNCTIONS
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//COMPUTE THE RING OF THE SELECTED VERTEX ver
+void TriangleMesh::newComputeRing(vector<uint> &ring, uint ver)
+{
+    bool found_first_border = false;
+    bool found_second_border = false;
+    bool loopCompleted = false;
+
+    int corner = cornersVertices[ver];
+
+    int startingN = next(corner);
+    int startingP = previous(corner);
+
+    //indices value of next and previous
+    int startingN_vert = corners[uint(startingN)].c();
+    int startingP_vert = corners[uint(startingP)].c();
+
+    ring.push_back(uint(startingN_vert));
+    ring.push_back(uint(startingP_vert));
+
+    int N = startingN;
+    int P = startingP;
+
+
+
+    //new starting value for a border
+    int restartingN = -1;
+    int restartingP = -1;
+
+
+
+
+    //loop opposite of P
+    while( !loopCompleted  && !found_first_border )
+    {
+
+        int oppP = opposites[uint(P)];
+        if(oppP == -1)
+        {
+            found_first_border = true;
+            restartingN = N;
+            restartingP = P;
+        }
+        else
+        {
+            N = oppP;
+            P = next(N);
+
+            //indices value of next and previous
+            int N_vert = corners[uint(N)].c();
+            int P_vert = corners[uint(P)].c();
+
+
+            if(N_vert == startingP_vert)
+            {
+                loopCompleted = true;
+            }
+            else
+                ring.push_back(uint(N_vert));
+        }
+
+    }
+    if(loopCompleted)
+//    {
+//        std::cout << " created a  ring with " << ring.size() << "vertices " << std::endl;
+//        std::cout << " ring: ";
+//        for(int r = 0; r < ring.size(); r++ )
+//            std::cout << " " << ring[r] << ", ";
+//        std::cout << std::endl;
+//    }
+
+    if(found_first_border)
+    {
+
+        vector<uint> temp_ring;
+
+        if(restartingN == -1 || restartingP == -1)
+            std::cout << " restarting values not initialized " << std::endl;
+
+
+        //indices value of next and previous
+        int restartingN_vert = corners[uint(restartingN)].c();
+        int restartingP_vert = corners[uint(restartingP)].c();
+
+        temp_ring.push_back(uint(restartingN_vert));
+        temp_ring.push_back(uint(restartingP_vert));
+
+        int test = 0;
+
+        int reN = restartingN;
+        int reP = restartingP;
+
+        while(!found_second_border && test < 20)
+        {
+
+            int oppN = opposites[uint(reN)];
+            if(oppN == -1)
+            {
+                found_second_border = true;
+            }
+            else
+            {
+                reP = oppN;
+                reN = previous(reP);
+                //indices value of previous
+                int reP_vert = corners[uint(reP)].c();
+                temp_ring.push_back(uint(reP_vert));
+            }
+
+        }
+
+
+        if(found_second_border)
+        {
+            ring = temp_ring;
+        }
+        else {
+            std::cout << " <<<<<<< SOMETHING WENT WRONG " << std::endl;
+        }
+
+
+    }
+
+
+
+
+
+}
+
 void TriangleMesh::computeRing(vector<uint> &ring, uint ver)
 {
     bool found_border = false;
 
-    uint corner = uint(cornersVertices[ver]);
+       uint corner = uint(cornersVertices[ver]);
+
+       //first triangle
+       uint nex, prev ;
+       nex = next(corner);
+       prev = previous(corner);
+
+       uint vertNext = uint(corners[nex].c());
+   //    int vertPrev = corners[uint(prev)].c();
+   //    ring.push_back(vertPrev);
+       ring.push_back(vertNext);
+
+       uint newNext = opposites[prev];
+       uint newVertNext = corners[newNext].c();
+
+       while( newVertNext != vertNext)
+       {
+           uint newPrev = next(newNext);
+   //        int newVertPrev = corners[uint(newPrev)].c();
+   //        ring.push_back(newVertPrev);
+           ring.push_back(newVertNext);
+
+           newNext = opposites[newPrev];
+           newVertNext = corners[newNext].c();
+   }
+}
+
+
+
+
+
+
+
+
+//COMPUTE THE RING OF THE SELECTED VERTEX ver
+void TriangleMesh::oldComputeRing(vector<uint> &ring, uint ver)
+{
+
+    std::cout << " ring vertex i :" << ver << std::endl;
+
+    bool found_first_border = false;
+    bool found_second_border = false;
+
+    int corner = cornersVertices[ver];
+
 
     //first triangle
-    uint nex, prev ;
+    int nex, prev ;
     nex = next(corner);
     prev = previous(corner);
 
-    uint vertNext = uint(corners[nex].c());
-//    int vertPrev = corners[uint(prev)].c();
+
+    uint vertNext = uint(corners[uint(nex)].c());
+    uint vertPrev = uint(corners[uint(prev)].c());
+
 //    ring.push_back(vertPrev);
     ring.push_back(vertNext);
 
-    uint newNext = opposites[prev];
-    uint newVertNext = corners[newNext].c();
-
-    while( newVertNext != vertNext)
+    int newNext = opposites[uint(prev)];
+    if(newNext == -1)
     {
-        uint newPrev = next(newNext);
-//        int newVertPrev = corners[uint(newPrev)].c();
-//        ring.push_back(newVertPrev);
-        ring.push_back(newVertNext);
 
-        newNext = opposites[newPrev];
-        newVertNext = corners[newNext].c();
-     }
+        //CASE 1 : THE FIRST OPPOSITE WE EXPLORE IS ALREADY ON THE BORDER
+
+        std::cout << " case 1 found first border " << std::endl;
+        found_first_border = true;
+
+        //we push back the previous
+        ring.push_back(vertPrev);
+
+        int newPrev = opposites[uint(nex)];
+        if(newPrev == -1)
+            std::cout << " case 1 problem" << std::endl;
+
+        uint newPrevVert = uint(corners[uint(newPrev)].c());
+        int test_iter = 0;
+        while( !found_second_border && test_iter < 10  )
+        {
+            int newNext = next(next(newPrev));
+
+            ring.push_back(newPrevVert);
+
+            newPrev = opposites[uint(newNext)];
+            if(newPrev == -1)
+            {
+                std::cout << " found second border " << std::endl;
+                found_second_border = true;
+            }
+            else newPrevVert = uint(corners[uint(newPrev)].c());
+
+            std::cout << " case 1 iteration:" << test_iter << std::endl;
+            test_iter++;
+         }
+
+
+    }
+    else
+    {
+
+        //CASE 2 : STARTING THE NORMAL LOOP
+        std::cout << " noraml loop " << std::endl;
+
+
+        uint newVertNext = uint(corners[uint(newNext)].c());
+
+        //case3 starting variables
+        int restartNext = -1, restartPrev = -1;
+
+        while( (newVertNext != vertNext) && (!found_first_border))
+        {
+            int newPrev = next(newNext);
+
+            ring.push_back(newVertNext);
+
+            restartNext = newNext;
+
+            newNext = opposites[uint(newPrev)];
+            if(newNext == -1)
+            {
+                std::cout << " found first border " << std::endl;
+                found_first_border = true;
+                restartPrev = newPrev;
+
+            }
+            else newVertNext = uint(corners[uint(newNext)].c());
+        }
+
+
+        //CASE 3 : WE FOUND A BORDER IN THE LOOP AND WE HAVE TO START AGAIN FROM THAT POINT ON THE OTHER DIRECTION
+        if(found_first_border)
+        {
+            std::cout << "case 3: found first border " << std::endl;
+            //check:
+            if(restartNext == -1 || restartPrev == -1)
+                std::cout<< " case 3 problem: restart variables not initialized "<< std::endl;
+
+
+            uint vertRestartNext = uint(corners[uint(restartNext)].c());
+            uint vertRestartPrev = uint(corners[uint(restartPrev)].c());
+
+            //we clear the ring until now
+            vector<uint> temp_ring;
+            //we push back the new vertices of the ring
+            temp_ring.push_back(vertRestartNext);
+            temp_ring.push_back(vertRestartPrev);
+
+
+            int newPrev = opposites[uint(vertRestartNext)];
+            if(newPrev == -1)
+            {
+                found_second_border = true;
+                std::cout << " case 3 problem" << std::endl;
+            }
+
+            uint newVertPrev = uint(corners[uint(newPrev)].c());
+
+            int test_iter = 0;
+
+            while( !found_second_border && test_iter < 10 )
+            {
+
+                int newNext = previous(newPrev);
+
+                temp_ring.push_back(newVertPrev);
+
+                newPrev = opposites[uint(newNext)];
+                if(newPrev == -1)
+                {
+                    std::cout << " found second border " << std::endl;
+                    found_second_border = true;
+                }
+                else newVertPrev = uint(corners[uint(newPrev)].c());
+                std::cout << " case 3 iteration:" << test_iter << std::endl;
+                test_iter++;
+             }
+            ring = temp_ring;
+        }
+    }
+
+
 }
 
 //COMPUTE COTANGENT OF THE VERTEX ver AND THE RING VERTEX r
@@ -1016,9 +1361,6 @@ void TriangleMesh::buildMatrixA()
     //vector of known values
 //    Eigen::VectorXd b(n);
 
-    //test:::
-    int max_column_i = 0;
-    int max_v = 0;
 
     //loop over all the vertices:
     for(uint v = 0; v < vertices.size(); v ++)
@@ -1042,16 +1384,13 @@ void TriangleMesh::buildMatrixA()
             coefficentsA.push_back(own_value_y);
             coefficentsA.push_back(own_value_z);
 
-            //test:::
-            if(3*v+2 > max_v) max_v = 3*v+2;
-            if(3*column_i+2 > max_column_i ) max_column_i = 3*column_i+2;
 
             //if inside cactus, if outside no cactus
             //add the weight to the one in the ring for each vertex
             double total_weight = 0.0;
             vector<double> weigthPerRing = computeWeight(v, ring, total_weight);
             //uniform
-            double w = 1.0/ring.size();
+//            double w = 1.0/ring.size();
             //b values
             double bx_i = 0.0, by_i = 0.0, bz_i = 0.0;
 
@@ -1114,7 +1453,7 @@ void TriangleMesh::buildMatrixA()
         //if is not fixed we replace the new vertex with the old one
         if(fix_checking[v_i] != -1 )
         {
-            uint index = fix_checking[v_i];
+            uint index = uint(fix_checking[v_i]);
             QVector3D new_vector = QVector3D( solution.coeff(3*index, 0), solution.coeff(3*index+1, 1), solution.coeff(3*index+2, 2)  );
             vertices[v_i] = new_vector;
         }
@@ -1176,14 +1515,18 @@ void TriangleMesh::applyMagnify()
 void TriangleMesh::computeParametrization()
 {
     orderBorderChain();
+    std::cout << "done with order border chain" << std::endl;
     parametrizeChain();
-//    parametrizeOtherVertices();
+    std::cout << "done with parametrize chain" << std::endl;
+
+    parametrizeOtherVertices();
 }
 
 
 void TriangleMesh::parametrizeChain()
 {
     parametrizeVertices.clear();
+    parametrizeVertices.resize(vertices.size());
 
     float circonf = float(2*M_PI);
 
@@ -1193,24 +1536,22 @@ void TriangleMesh::parametrizeChain()
     for(uint b = 0; b < border.size(); b++)
     {
         glm::vec3 v1,v2;
-        if(b == border.size())
+        if(b == border.size()-1)
         {
             v1 = glm::vec3(vertices[border[b]].x(),vertices[border[b]].y(),vertices[border[b]].z());
             v2 = glm::vec3(vertices[border[0]].x(),vertices[border[0]].y(),vertices[border[0]].z());
-            std::cout << " vertices :" << border[b] << "  " << border[0] ;
         }
         else
         {
             v1 = glm::vec3(vertices[border[b]].x(),vertices[border[b]].y(),vertices[border[b]].z());
             v2 = glm::vec3(vertices[border[b+1]].x(),vertices[border[b+1]].y(),vertices[border[b+1]].z());
-            std::cout << " vertices :" <<border[b] << "  " << border[b+1] ;
 
         }
 
         float distance = glm::distance(v1,v2);
         totalDistance = totalDistance + distance;
         individualDistance.push_back(totalDistance);
-        std::cout << "  have distance :" << distance << " and total distance is : " << totalDistance << std::endl;
+//        std::cout << "  have distance :" << distance << " and total distance is : " << totalDistance << std::endl;
     }
 
     //unit step on the circonference
@@ -1226,8 +1567,8 @@ void TriangleMesh::parametrizeChain()
         if(b == 0)
             pos = center + glm::vec2(radius,0.0);
         else pos =  center + glm::vec2( cos(angle)*radius, sin(angle)*radius );
-
-        parametrizeVertices.push_back(pos);
+        uint index = border[b];
+        parametrizeVertices[index] = QVector2D(pos.x,pos.y);
     }
 }
 
@@ -1235,35 +1576,139 @@ void TriangleMesh::parametrizeChain()
 void TriangleMesh::parametrizeOtherVertices()
 {
 
-
-    for(uint v = 0; v < vertices.size(); v++)
+    //compute fix border checking
+    int iter= 0;
+    for(uint i = 0; i< vertices.size(); i ++)
     {
-        std::vector<glm::vec3> laplacians;
-        std::vector<glm::vec3> vertices;
-
-
-
-        std::vector<uint> ring;
-        computeRing(ring,v);
-
-
-
-
-//        float max_laplace = 0.0f;
-//        float radius = 0.5;
-//        //if it is not in the border chain
-//        if(!isInBorderChain(v))
-//        {
-//               glm::vec3 vert = glm::vec3(vertices[v].x, vertices[v].y, vertices[v].z);
-//               vertices.push_back(vert);
-//               glm::vec3 laplacian = computeLaplacian(v, border_chain, current_weight_type);
-//               if ( glm::length(laplacian) > max_laplace )
-//                   max_laplace = glm::length(laplacian);
-//               laplacians.push_back(laplacian);
-
-//        }
+        bool isInBorder = false;
+        for(uint b = 0; b < border.size(); b++)
+        {
+            if(i == border[b] )
+                isInBorder = true;
+        }
+        if(isInBorder)
+        {
+            fix_border_checking.push_back(iter);
+            iter++;
+        }
+        else fix_border_checking.push_back(-1);
     }
 
+
+
+
+
+    int n = int( 2*vertices.size() );
+
+    int fixed = int( 2*border.size());
+
+    //matrix A
+    Eigen::SparseMatrix<double> matrixA = Eigen::SparseMatrix<double>( n , (n-fixed) );
+    Eigen::SparseMatrix<double> vectorB = Eigen::SparseMatrix<double>(n, 2);
+
+    std::cout << " sizes : matrix A: " << n <<" x " << n-fixed << "  and vector B: "<< n << " x " << 3 << std::endl;
+
+    //coefficents T = Eigen::Triplet<double>
+    std::vector<Triplet> coefficentsA;
+    std::vector<Triplet> coefficentsB;
+    //vector of known values
+//    Eigen::VectorXd b(n);
+
+
+    //loop over all the vertices:
+    for(uint v = 0; v < vertices.size(); v ++)
+    {
+        std::vector<uint> ring;
+        newComputeRing(ring, v);
+
+
+
+        int column_i = fix_border_checking[v];
+
+        //if a vertex is not fixed just put is own value in the column
+        if( fix_border_checking[v] != -1 )
+        {
+            //add its own position
+            Triplet own_value_x = Triplet( 2*int(v),   2*column_i,   -1 );
+            Triplet own_value_y = Triplet( 2*int(v)+1, 2*column_i+1, -1 );
+//            Triplet own_value_z = Triplet( 3*int(v)+2, 3*column_i+2, -1 );
+
+            coefficentsA.push_back(own_value_x);
+            coefficentsA.push_back(own_value_y);
+//            coefficentsA.push_back(own_value_z);
+
+
+            //if inside cactus, if outside no cactus
+            //add the weight to the one in the ring for each vertex
+            double total_weight = 0.0;
+            vector<double> weigthPerRing = computeWeight(v, ring, total_weight);
+            //b values
+            double bx_i = 0.0, by_i = 0.0;
+
+            for(uint r = 0; r < ring.size(); r++)
+            {
+                uint ri = ring[r];
+                int ring_column_i = fix_border_checking[ri];
+
+                //if the neighbour is fixed compute the value of B, don't add any column
+                if( fix_border_checking[ri] == -1 )
+                {
+//                    bx_i = bx_i + double(vertices[ri].x());
+//                    by_i = by_i + double(vertices[ri].y());
+//                    bz_i = bz_i + double(vertices[ri].z());
+                    bx_i = bx_i + double(vertices[ri].x())*weigthPerRing[r]/total_weight;
+                    by_i = by_i + double(vertices[ri].y())*weigthPerRing[r]/total_weight;
+//                    bz_i = bz_i + double(vertices[ri].z())*weigthPerRing[r]/total_weight;
+                }
+                else
+                {
+                    //else put the waight w in the right column
+                    Triplet new_value_x = Triplet( 2*int(v),   2*ring_column_i,   weigthPerRing[r]/total_weight);
+                    Triplet new_value_y = Triplet( 2*int(v)+1, 2*ring_column_i+1, weigthPerRing[r]/total_weight);
+//                    Triplet new_value_z = Triplet( 3*int(v)+2, 3*ring_column_i+2, weigthPerRing[r]/total_weight);
+
+                    coefficentsA.push_back(new_value_x);
+                    coefficentsA.push_back(new_value_y);
+//                    coefficentsA.push_back(new_value_z);
+                }
+
+            }
+
+            //fill the b vertex
+            Triplet new_b_value_x = Triplet( 2*int(v),   0, -(bx_i) );
+            Triplet new_b_value_y = Triplet( 2*int(v)+1, 1, -(by_i) );
+//            Triplet new_b_value_z = Triplet( 3*int(v)+2, 2, -(bz_i) );
+
+            coefficentsB.push_back(new_b_value_x);
+            coefficentsB.push_back(new_b_value_y);
+//            coefficentsB.push_back(new_b_value_z);
+
+
+        }
+    }
+
+    //fill the matrices
+    matrixA.setFromTriplets(coefficentsA.begin(), coefficentsA.end());
+    vectorB.setFromTriplets(coefficentsB.begin(), coefficentsB.end());
+
+
+    Eigen::SimplicialCholesky<Eigen::SparseMatrix<double>> solver;
+    solver.compute(matrixA.transpose()*matrixA);
+    Eigen::SparseMatrix<double> solution = solver.solve(matrixA.transpose()*vectorB);
+
+
+
+    //UPDATING THE VERTICES
+    for(uint v_i = 0; v_i < fix_border_checking.size(); v_i++)
+    {
+        //if is not fixed we replace the new vertex with the old one
+        if(fix_border_checking[v_i] != -1 )
+        {
+            uint index = uint(fix_border_checking[v_i]);
+            QVector2D new_vector = QVector2D( solution.coeff(2*index, 0), solution.coeff(2*index+1, 1) );
+            parametrizeVertices[v_i] = new_vector;
+        }
+    }
 }
 
 
@@ -1272,6 +1717,7 @@ void TriangleMesh::parametrizeOtherVertices()
 //check for each vertex vert if it is one of the border vertices
 void TriangleMesh::orderBorderChain()
 {
+
     border.clear();
     //check for each edge of the border chain
     std::cout << border_chain.size() << std::endl;

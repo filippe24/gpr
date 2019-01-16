@@ -11,10 +11,11 @@ out vec4 fragColor;
 
 uniform bool bLighting;
 uniform bool bReflectionLines = false;
+uniform bool param = false;
 
 const float PI = 3.141592;
 
-
+smooth in vec2 vTexCoord;
 
 
 void main()
@@ -22,7 +23,7 @@ void main()
     vec4 final_color = vec4(vColor,1.0);
 
     if(bLighting)
-            final_color = (final_color)*vNormal.z;
+        final_color = (final_color)*vNormal.z;
 
 
     //Reflecting Line
@@ -36,6 +37,17 @@ void main()
             final_color = vec4(1.0,1.0,0.0,1.0);
         else
             final_color = vec4(0.0,1.0,0.0,1.0);
+    }
+    else if(param)
+    {
+        int row = int(floor(vTexCoord.s * 5));
+        int column = int(floor(vTexCoord.t * 5));
+        float selected_color = float(((row + column +1)%2)*0.7);
+        final_color = vec4(selected_color, 0.8, 0.2,1.0);
+
+
+
+
     }
 
     fragColor = final_color;

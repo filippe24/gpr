@@ -86,6 +86,7 @@ public:
 
     //LAB 5: Compute parametrization
     void computeParametrization();
+    bool parametrizationON = false;
 
 
 
@@ -97,6 +98,8 @@ public:
 
 
     //FUNCTION GENERAL USAGE:
+    void oldComputeRing(vector<uint> &ring, uint ver);
+    void newComputeRing(vector<uint> &ring, uint ver);
     void computeRing(vector<uint> &ring, uint ver);
     float computeCotangent(uint ver, vector<uint> ring, uint r, bool alternative = false);
     float cotangentComputation(glm::vec3 v_i,glm::vec3 v_ang, glm::vec3 v_j);
@@ -105,8 +108,8 @@ public:
 
 
 private:
-    void buildReplicatedVertices(vector<QVector3D> &replicatedVertices, vector<QVector3D> &normals, vector<unsigned int> &perFaceTriangles, vector<QVector2D> &replicatedColors);
-    void fillVBOs(vector<QVector3D> &replicatedVertices, vector<QVector3D> &normals, vector<unsigned int> &perFaceTriangles, vector<QVector2D> &replicatedColors);
+    void buildReplicatedVertices(vector<QVector3D> &replicatedVertices, vector<QVector3D> &normals, vector<unsigned int> &perFaceTriangles, vector<QVector2D> &replicatedColors, vector<QVector2D> &replicatedTextureCoordinates);
+    void fillVBOs(vector<QVector3D> &replicatedVertices, vector<QVector3D> &normals, vector<unsigned int> &perFaceTriangles, vector<QVector2D> &replicatedColors, vector<QVector2D> &replicatedTextureCoordinates);
 
 private:
     QOpenGLShaderProgram *active_program;
@@ -117,7 +120,7 @@ private:
 
 	QOpenGLVertexArrayObject vao;
 	QOpenGLBuffer vboVertices, vboNormals, eboTriangles;
-    QOpenGLBuffer vboCurvatureColors, vboColorGauss, vboColorMean;
+    QOpenGLBuffer vboCurvatureColors, vboColorGauss, vboColorMean, vboTextureCoordinates;
 
 
 
@@ -182,7 +185,8 @@ private:
     vector<uint> lonely_corners;
     vector<pair<uint,uint>> border_chain;
     vector<uint> border;
-    vector<glm::vec2> parametrizeVertices;
+    vector<QVector2D> parametrizeVertices;
+    vector<int> fix_border_checking;
 
     void parametrizeChain();
     void parametrizeOtherVertices();

@@ -147,6 +147,13 @@ void MainWindow::on_meanWeight_sliderMoved(int position)
 void MainWindow::on_parametrizeButton_clicked()
 {
     ui->openGLWidget->accesMesh().computeParametrization();
+    bool previousBool = ui->openGLWidget->parametrization_on;
+    ui->openGLWidget->parametrization_on = !previousBool;
+    bool previousMeshBool = ui->openGLWidget->accesMesh().parametrizationON;
+    ui->openGLWidget->accesMesh().parametrizationON = !previousMeshBool;
+    if(!previousMeshBool)
+        ui->openGLWidget->accesMesh().updateVBOCurvatures();
+
 }
 
 

@@ -60,6 +60,8 @@ void GLWidget::initializeGL()
 
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glEnable(GL_DEPTH_TEST);
+
+    std::cout << " initialization done " << std::endl;
 }
 
 void GLWidget::resizeGL(int w, int h)
@@ -97,6 +99,8 @@ void GLWidget::paintGL()
 
     program->setUniformValue("gauss_weight", gauss_weight);
     program->setUniformValue("mean_weight", mean_weight);
+
+    program->setUniformValue("param", parametrization_on);
 
 
 

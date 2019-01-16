@@ -4,7 +4,7 @@
 layout (location = 0) in vec3 position;
 layout (location = 1) in vec3 normal;
 layout (location = 2) in vec2 curvature_colors;
-
+layout (location = 3) in vec2 texture_coordinates;
 
 
 out vec3 vNormal;
@@ -32,6 +32,8 @@ uniform float mean_weight = 0.1;
 
 
 
+smooth out vec2 vTexCoord;
+
 
 
 void main()
@@ -41,6 +43,11 @@ void main()
         vNormal = normalize(normalMatrix * normal);
         vColor = color.xyz;
         gl_Position = projection * modelview * vec4(position, 1.0);
+
+
+        //parametrization
+        vTexCoord = texture_coordinates;
+
 
         //reflection lines
         vec4 positionView = modelview*vec4(position, 1);

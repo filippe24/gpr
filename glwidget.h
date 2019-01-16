@@ -35,6 +35,9 @@ public:
     //lab4: magnify
     void magnify_details(bool isCotangent);
 
+    //lab5:parametrization
+    bool parametrization_on = false;
+
     //comunication
     TriangleMesh& accesMesh();
 
